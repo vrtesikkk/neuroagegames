@@ -58,7 +58,8 @@ let gameState = {
     gameActive: false,
     phase: 'waiting', // 'waiting', 'highlighting', 'moving', 'selecting', 'feedback'
     circles: [],
-    animationFrameId: null
+    animationFrameId: null,
+    selectionLocked: false
 };
 
 // ============================================================================
@@ -82,6 +83,11 @@ const roundResult = document.getElementById('tt-roundResult');
 const resultText = document.getElementById('tt-resultText');
 const finalAccuracy = document.getElementById('tt-finalAccuracy');
 const finalRounds = document.getElementById('tt-finalRounds');
+const confirmModal = document.getElementById('tt-confirmModal');
+const confirmYes = document.getElementById('tt-confirmYes');
+const confirmNo = document.getElementById('tt-confirmNo');
+
+let modalListenersAttached = false;
 
 // ============================================================================
 // LOCAL STORAGE FUNCTIONS
@@ -320,24 +326,43 @@ function startMovementPhase() {
 function startSelectionPhase() {
     gameState.phase = 'selecting';
     gameState.selectedCircles = [];
+    gameState.selectionLocked = false;
     if (statusMessage) {
-        statusMessage.textContent = 'Click on the circles that were highlighted';
         statusMessage.className = 'text-base font-semibold text-blue-400';
     }
     
     // Enable clicking on all circles
     gameState.circles.forEach(circle => {
         circle.element.style.cursor = 'pointer';
+        circle.element.style.pointerEvents = 'auto';
     });
     
-    // Add check button
-    addCheckButton();
+    updateSelectionPrompt();
+}
+
+function updateSelectionPrompt() {
+    if (!statusMessage) return;
+
+    const remaining = Math.max(gameState.numTargets - gameState.selectedCircles.length, 0);
+    if (remaining > 0) {
+        const plural = remaining === 1 ? '' : 's';
+        statusMessage.textContent = `Select ${remaining} more circle${plural} that were highlighted`;
+        statusMessage.className = 'text-base font-semibold text-blue-400';
+    } else {
+        statusMessage.textContent = 'Evaluating your selection...';
+        statusMessage.className = 'text-base font-semibold text-yellow-400';
+    }
 }
 
 function handleCircleClick(index) {
-    if (gameState.phase !== 'selecting') return;
+    if (gameState.phase !== 'selecting' || gameState.selectionLocked) return;
     
     const circle = gameState.circles[index];
+    if (!circle || !circle.element) return;
+    
+    if (!circle.isSelected && gameState.selectedCircles.length >= gameState.numTargets) {
+        return;
+    }
     
     if (circle.isSelected) {
         // Deselect
@@ -351,14 +376,28 @@ function handleCircleClick(index) {
         gameState.selectedCircles.push(index);
     }
     
-    // Check if all targets are selected (or allow player to finish selecting)
-    // We'll show feedback when they've selected enough or click a button
+    updateSelectionPrompt();
+
+    if (gameState.selectedCircles.length === gameState.numTargets) {
+        gameState.selectionLocked = true;
+        gameState.phase = 'checking';
+        gameState.circles.forEach(c => {
+            c.element.style.pointerEvents = 'none';
+        });
+        updateSelectionPrompt();
+        setTimeout(() => {
+            if (gameState.phase === 'checking') {
+                showFeedback();
+            }
+        }, 400);
+    }
 }
 
 function showFeedback() {
-    if (gameState.phase !== 'selecting') return;
+    if (gameState.phase !== 'selecting' && gameState.phase !== 'checking') return;
     
     gameState.phase = 'feedback';
+    gameState.selectionLocked = true;
     if (statusMessage) {
         statusMessage.textContent = 'Results:';
         statusMessage.className = 'text-base font-semibold text-green-400';
@@ -450,7 +489,6 @@ function nextRound() {
         return;
     }
     
-    removeCheckButton();
     gameState.currentRound++;
     if (roundResult) roundResult.classList.add('hidden');
     
@@ -469,6 +507,8 @@ function nextRound() {
 }
 
 function startRound() {
+    gameState.selectionLocked = false;
+    gameState.selectedCircles = [];
     createCircles();
     setTimeout(() => {
         startHighlightPhase();
@@ -497,16 +537,14 @@ function startGame() {
     gameState.difficultyLevel = 1;
     gameState.numTargets = INITIAL_NUM_TARGETS;
     gameState.movementSpeed = INITIAL_MOVEMENT_SPEED;
+    gameState.selectionLocked = false;
     
     updateScoreDisplay();
     startRound();
 }
 
 function resetGame() {
-    if (confirm('Are you sure you want to restart? Your current progress will be lost.')) {
-        clearGameState();
-        startGame();
-    }
+    showConfirmModal();
 }
 
 function endGame() {
@@ -531,34 +569,88 @@ function playAgain() {
     startGame();
 }
 
+function showConfirmModal() {
+    if (confirmModal) {
+        confirmModal.classList.remove('hidden');
+    }
+}
+
+function hideConfirmModal() {
+    if (confirmModal) {
+        confirmModal.classList.add('hidden');
+    }
+}
+
+function performGameReset() {
+    hideConfirmModal();
+
+    if (gameState.animationFrameId) {
+        cancelAnimationFrame(gameState.animationFrameId);
+        gameState.animationFrameId = null;
+    }
+
+    if (roundResult) {
+        roundResult.classList.add('hidden');
+    }
+
+    if (gameOverScreen) {
+        gameOverScreen.classList.add('hidden');
+    }
+
+    if (gameCanvas) {
+        gameCanvas.innerHTML = '';
+    }
+
+    gameState.phase = 'waiting';
+    gameState.circles = [];
+    gameState.targets = [];
+    gameState.selectedCircles = [];
+    gameState.selectionLocked = false;
+    clearGameState();
+    startGame();
+}
+
 // ============================================================================
 // EVENT LISTENERS
 // ============================================================================
 // Event listeners are set up in initializeGame() when the container becomes active
 
-// Add a button or automatic feedback after selection
-// For now, we'll add a "Check" button or auto-check after a delay
-// Let's add a check button that appears during selection phase
-
-function addCheckButton() {
-    // Check if button already exists
-    if (document.getElementById('tt-checkButton')) return;
-    
-    const checkBtn = document.createElement('button');
-    checkBtn.id = 'tt-checkButton';
-    checkBtn.textContent = 'Check Answers';
-    checkBtn.className = 'bg-blue-600 hover:bg-blue-700 text-black font-semibold py-2 px-6 rounded-lg text-sm transition-all duration-200 shadow-md hover:shadow-lg mt-4';
-    checkBtn.addEventListener('click', showFeedback);
-    
-    const statusDiv = statusMessage.parentElement;
-    statusDiv.appendChild(checkBtn);
-}
-
-function removeCheckButton() {
-    const checkBtn = document.getElementById('tt-checkButton');
-    if (checkBtn) {
-        checkBtn.remove();
+function ensureModalListeners() {
+    if (modalListenersAttached) {
+        return;
     }
+
+    if (confirmYes) {
+        confirmYes.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            performGameReset();
+        });
+    }
+
+    if (confirmNo) {
+        confirmNo.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            hideConfirmModal();
+        });
+    }
+
+    if (confirmModal) {
+        confirmModal.addEventListener('click', (e) => {
+            if (e.target === confirmModal) {
+                hideConfirmModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && confirmModal && !confirmModal.classList.contains('hidden')) {
+            hideConfirmModal();
+        }
+    });
+
+    modalListenersAttached = true;
 }
 
 
@@ -634,6 +726,8 @@ function initializeGame() {
             playAgain();
         });
     }
+    
+    ensureModalListeners();
     
     loadGameState();
     updateScoreDisplay();
