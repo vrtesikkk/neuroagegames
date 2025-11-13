@@ -76,7 +76,6 @@ const playAgainBtn = document.getElementById('tt-playAgainBtn');
 const gameOverScreen = document.getElementById('tt-gameOverScreen');
 const roundCounter = document.getElementById('tt-roundCounter');
 const accuracyCounter = document.getElementById('tt-accuracyCounter');
-const difficultyDisplay = document.getElementById('tt-difficultyDisplay');
 const streakCounter = document.getElementById('tt-streakCounter');
 const statusMessage = document.getElementById('tt-statusMessage');
 const roundResult = document.getElementById('tt-roundResult');
@@ -133,7 +132,6 @@ function updateScoreDisplay() {
         : 0;
     if (accuracyCounter) accuracyCounter.textContent = `${accuracy}%`;
     
-    if (difficultyDisplay) difficultyDisplay.textContent = `Level ${gameState.difficultyLevel}`;
     if (streakCounter) streakCounter.textContent = gameState.consecutiveCorrect;
 }
 
