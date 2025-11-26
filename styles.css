@@ -270,6 +270,16 @@ body {
 #dd-gameArea {
     position: relative;
     z-index: 1;
+    background:
+    radial-gradient(circle at 20% 20%, #1a1931 0, transparent 50%),
+    radial-gradient(circle at 80% 80%, #201018 0, transparent 55%),
+    radial-gradient(circle at 10% 80%, #212e30 0, transparent 45%),
+    radial-gradient(circle at 90% 10%, #1c0344 0, transparent 40%),
+    linear-gradient(160deg, #020018, #13002e 40%, #2b0066 100%);
+    background-size: cover;
+  background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: #fff;
 }
 
 /* Game canvas container */
@@ -518,3 +528,4 @@ body {
         height: 40px !important;
     }
 }
+

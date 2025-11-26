@@ -63,6 +63,7 @@
 
     <!-- Double Decision Game -->
     <div id="doubleDecision" class="game-container max-w-2xl w-full mx-auto px-4">
+
         <!-- Header -->
         <div class="text-center mb-4">
             <button type="button" onclick="switchGame('menu'); return false;" class="back-to-menu-btn mb-4">
@@ -103,7 +104,7 @@
                 </p>
                 <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-left rounded">
                     <p class="text-sm text-gray-700">
-                        <strong>Instructions:</strong> Watch the center object (🔵 or 🔺) and the star (⭐) that appears around it. After they disappear, choose which object was in the center and click where the star appeared.
+                        <strong>Instructions:</strong> Watch the center ufo and the moon that appears around it. After they disappear, choose which object was in the center and click where the star appeared.
                     </p>
                 </div>
             </div>
@@ -123,13 +124,18 @@
                 </svg>
                 <!-- Center Object Display -->
                 <div class="dd-center-object-container absolute pointer-events-none z-10">
-                    <div class="text-5xl md:text-6xl" id="dd-centerObject"></div>
+                    <div class="text-5xl md:text-6xl" id="dd-centerObject">
+                        <div class image-center-object>
+                        <img src="img/ufo1.png" alt="UFO" class="hidden">
+                        <img src="img/ufo2.png" alt="ufo2" class="hidden">
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <!-- Center Object Choice Buttons -->
             <div class="mt-4">
-                <p class="text-center text-base font-semibold text-gray-700 mb-3">Which object appeared in the center?</p>
+                <p class="text-center text-base font-semibold text-lightgray-700 mb-3">Which object appeared in the center?</p>
                 <div class="flex justify-center gap-3 flex-wrap">
                     <button class="dd-choice-btn bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-3 px-6 rounded-lg text-3xl transition-all duration-200 shadow-md hover:shadow-lg border-2 border-blue-200" data-choice="🔵">🔵</button>
                     <button class="dd-choice-btn bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-3 px-6 rounded-lg text-3xl transition-all duration-200 shadow-md hover:shadow-lg border-2 border-blue-200" data-choice="🔺">🔺</button>
@@ -138,7 +144,7 @@
 
             <!-- Click Prompt -->
             <div class="mt-4 text-center">
-                <p class="text-base font-semibold text-gray-700" id="dd-clickPrompt">Click where the ⭐ appeared</p>
+                <p class="text-base font-semibold text-lightgray-700" id="dd-clickPrompt">Click where the ⭐ appeared</p>
             </div>
 
             <!-- Restart Button -->

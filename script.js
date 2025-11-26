@@ -13,7 +13,7 @@ const NUM_PERIPHERAL_POSITIONS = 8;
 
 // Object types for center and peripheral display
 // You can change these to any emoji or character
-const CENTER_OBJECTS = ['🔵', '🔺'];
+const CENTER_OBJECTS = ['img/ufo1.png', 'img/ufo2.png'];
 const PERIPHERAL_OBJECT = '⭐';
 
 // Initial display time in milliseconds (0.5-1 second range)
