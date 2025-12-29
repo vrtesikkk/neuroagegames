@@ -13,10 +13,35 @@ const NUM_PERIPHERAL_POSITIONS = 8;
 
 // Object types for center and peripheral display
 // You can change these to any emoji or character
-const CENTER_OBJECTS = ['img/ufo1.png', 'img/ufo2.png'];
-const PERIPHERAL_OBJECT = '⭐';
+const THEMES = {
+    space: {
+        centerObjects: ['img/ufo1.png', 'img/ufo2.png'],
+        peripheralObject: 'img/moon.png',
+        backgroundClass: 'dd-theme-space',
+        clickPrompt: 'Click the sector where the moon appeared'
+    },
 
-// Initial display time in milliseconds (0.5-1 second range)
+    ocean: {
+        centerObjects: ['img/shark1.png', 'img/shark2.png'],
+        peripheralObject: 'img/dolphin.png',
+        backgroundClass: 'dd-theme-ocean',
+        clickPrompt: 'Click the sector where the dolphin appeared'
+    },
+
+    candyworld: {
+        centerObjects: ['img/candy1.png', 'img/candy2.png'],
+        peripheralObject: 'img/cookie.png',
+        backgroundClass: 'dd-theme-candyworld',
+        clickPrompt: 'Click the sector where the cookie appeared'
+    }
+
+};
+
+let ACTIVE_THEME = THEMES.space; // Default theme
+
+
+
+// Initial display time in milliseconds (starts at easiest, decreases each round)
 const INITIAL_DISPLAY_TIME = 500;
 
 // Minimum and maximum display times (in milliseconds)
@@ -66,7 +91,10 @@ const startBtn = document.getElementById('dd-startBtn');
 const gameRestartBtn = document.getElementById('dd-gameRestartBtn');
 const sectorSvg = document.getElementById('dd-sectorSvg');
 const sectorsGroup = document.getElementById('dd-sectors');
-const starText = document.getElementById('dd-star')
+const moonImg = document.getElementById('dd-moon');
+const progressBar = document.getElementById('dd-progressBar');
+const progressText = document.getElementById('dd-progressText');
+const progressDetails = document.getElementById('dd-progressDetails');
 
 let NUM_SECTORS = 8;
 // ============================================================================
@@ -102,7 +130,7 @@ function clearGameState() {
 // ============================================================================
 
 function updateScoreDisplay() {
-    if (roundCounter) roundCounter.textContent = `${gameState.currentRound}/${TOTAL_ROUNDS}`;
+    if (roundCounter) roundCounter.textContent = gameState.currentRound;
     if (attemptsCounter) attemptsCounter.textContent = gameState.totalAttempts;
     
     const accuracy = gameState.totalAttempts > 0 
@@ -111,6 +139,33 @@ function updateScoreDisplay() {
     if (accuracyCounter) accuracyCounter.textContent = `${accuracy}%`;
     
     if (difficultyDisplay) difficultyDisplay.textContent = `${gameState.displayTime}ms`;
+    
+    // Update progress bar
+    updateProgressBar();
+}
+
+function updateProgressBar() {
+    // Calculate progress: (currentRound - 1) / TOTAL_ROUNDS * 100
+    // We use currentRound - 1 because we want to show progress after completing a round
+    const progress = Math.min(100, Math.round(((gameState.currentRound - 1) / TOTAL_ROUNDS) * 100));
+    
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+        if (progress === 100) {
+            progressBar.classList.add('complete');
+        } else {
+            progressBar.classList.remove('complete');
+        }
+    }
+    
+    if (progressText) {
+        progressText.textContent = `${progress}%`;
+    }
+    
+    if (progressDetails) {
+        const remaining = TOTAL_ROUNDS - (gameState.currentRound - 1);
+        progressDetails.textContent = `Round ${gameState.currentRound - 1} of ${TOTAL_ROUNDS} • ${remaining} remaining`;
+    }
 }
 
 // ============================================================================
@@ -119,7 +174,8 @@ function updateScoreDisplay() {
 
 function getRandomCenterObject() {
     // Randomly select one of the center objects
-    return CENTER_OBJECTS[Math.floor(Math.random() * CENTER_OBJECTS.length)];
+    const objs = ACTIVE_THEME.centerObjects;
+    return objs[Math.floor(Math.random() * objs.length)];
 }
 
 function getRandomPeripheralPosition() {
@@ -130,7 +186,7 @@ function getRandomPeripheralPosition() {
 function getPositionCoordinates(position) {
     // Returns the coordinates for positioning the peripheral object
     // Position 0-7 correspond to the 8 positions around the center
-    // Using ~90% to keep stars within bounds (instead of 100% which goes outside)
+    // Using ~90% to keep moon within bounds (instead of 100% which goes outside)
     const positions = [
         { top: '5%', left: '50%', transform: 'translate(-50%, -50%)' },      // Top
         { top: '20%', left: '90%', transform: 'translate(-50%, -50%)' },     // Top Right
@@ -151,12 +207,10 @@ function resetUI() {
         if (btn) {
             btn.disabled = false;
             // Remove all possible state classes
-            btn.classList.remove('bg-blue-500', 'text-white', 'scale-110', 'opacity-50', 'bg-blue-100');
-            // Reset to default state
-            btn.classList.add('bg-blue-50', 'text-blue-700');
+            btn.classList.remove('selected', 'disabled', 'opacity-50');
             // Ensure pointer events are enabled
-            btn.style.pointerEvents = 'auto';
-            btn.style.cursor = 'pointer';
+            btn.classList.add('btn-pointer-auto');
+            btn.classList.remove('btn-pointer-none');
         }
     });
 
@@ -166,8 +220,8 @@ function resetUI() {
         sectors.forEach(sector => {
             if (sector) {
                 sector.classList.remove('selected');
-                sector.style.pointerEvents = 'auto';
-                sector.style.opacity = '1';
+                sector.classList.add('sector-pointer-auto', 'sector-opacity-full');
+                sector.classList.remove('sector-pointer-none', 'sector-opacity-half');
             }
         });
     }
@@ -191,21 +245,30 @@ function displayObjects() {
     // Re-setup event listeners to ensure buttons are clickable
     setupGameEventListeners();
 
-    // Random center object and sector for star
+    // Random center object and sector for moon
     gameState.centerObject = getRandomCenterObject();
     gameState.peripheralPosition = Math.floor(Math.random() * NUM_SECTORS);
 
-    // Show center object (🔵 or 🔺)
+    // Show center object (UFO image)
+    const centerObjectImg = document.getElementById('dd-centerObjectImg');
+    if (centerObjectImg) {
+        centerObjectImg.src = gameState.centerObject;
+        centerObjectImg.classList.remove('hidden');
+        centerObjectImg.classList.add('dd-object-visible');
+    }
     if (centerObjectDisplay) {
-        centerObjectDisplay.textContent = gameState.centerObject;
         centerObjectDisplay.classList.remove('dd-object-hidden');
         centerObjectDisplay.classList.add('dd-object-visible');
     }
 
-    // Position star in selected sector and show it
-    positionStarInSector(gameState.peripheralPosition);
-    if (starText) {
-        starText.style.opacity = '1';
+    // Position moon in selected sector and show it
+    positionMoonInSector(gameState.peripheralPosition);
+
+    moonImg.src = ACTIVE_THEME.peripheralObject;
+
+    if (moonImg) {
+        moonImg.classList.remove('moon-hidden');
+        moonImg.classList.add('moon-visible');
     }
 
     // Enable choice buttons
@@ -224,25 +287,31 @@ function displayObjects() {
         sectors.forEach(sector => {
             if (sector) {
                 sector.classList.remove('selected');
-                sector.style.pointerEvents = 'auto';
-                sector.style.opacity = '1';
+                sector.classList.add('sector-pointer-auto', 'sector-opacity-full');
+                sector.classList.remove('sector-pointer-none', 'sector-opacity-half');
             }
         });
     }
 
     // After display time, hide everything
     setTimeout(() => {
+        const centerObjectImg = document.getElementById('dd-centerObjectImg');
+        if (centerObjectImg) {
+            centerObjectImg.classList.add('hidden');
+            centerObjectImg.classList.remove('dd-object-visible');
+        }
         if (centerObjectDisplay) {
             centerObjectDisplay.classList.remove('dd-object-visible');
             centerObjectDisplay.classList.add('dd-object-hidden');
         }
-        if (starText) {
-            starText.style.opacity = '0';
+        if (moonImg) {
+            moonImg.classList.remove('moon-visible');
+            moonImg.classList.add('moon-hidden');
         }
 
         setTimeout(() => {
             gameState.waitingForInput = true;
-            if (clickPrompt) clickPrompt.textContent = 'Click the sector where the ⭐ appeared';
+            if (clickPrompt) clickPrompt.textContent = 'Click the sector where the moon appeared';
         }, 200);
     }, gameState.displayTime);
 }
@@ -261,7 +330,10 @@ function checkAnswers() {
     const sectors = document.querySelectorAll('.dd-sector');
     if (sectors && sectors.length > 0) {
         sectors.forEach(sector => {
-            if (sector) sector.style.pointerEvents = 'none';
+            if (sector) {
+                sector.classList.add('sector-pointer-none');
+                sector.classList.remove('sector-pointer-auto');
+            }
         });
     }
 
@@ -284,24 +356,20 @@ function checkAnswers() {
 
     if (bothCorrect) {
         gameState.correctAnswers++;
-        // Decrease display time (make harder)
-        gameState.displayTime = Math.max(
-            MIN_DISPLAY_TIME,
-            gameState.displayTime - DIFFICULTY_STEP
-        );
-    } else {
-        // Increase display time (make easier)
-        gameState.displayTime = Math.min(
-            MAX_DISPLAY_TIME,
-            gameState.displayTime + DIFFICULTY_STEP
-        );
     }
+
+    // Increase difficulty every round by 50ms (decrease display time - make harder)
+    gameState.displayTime = Math.max(
+        MIN_DISPLAY_TIME,
+        gameState.displayTime - DIFFICULTY_STEP
+    );
 
     updateScoreDisplay();
     saveGameState();
 
     // Move to next round or end game
     gameState.currentRound++;
+    updateProgressBar();
     
     if (gameState.currentRound > TOTAL_ROUNDS) {
         setTimeout(() => {
@@ -362,12 +430,18 @@ function resetGame() {
     gameState.waitingForInput = false;
 
     // Clear displays
+    const centerObjectImg = document.getElementById('dd-centerObjectImg');
+    if (centerObjectImg) {
+        centerObjectImg.src = '';
+        centerObjectImg.classList.add('hidden');
+        centerObjectImg.classList.remove('dd-object-visible');
+    }
     if (centerObjectDisplay) {
-        centerObjectDisplay.textContent = '';
         centerObjectDisplay.classList.remove('dd-object-visible', 'dd-object-hidden');
     }
-    if (starText) {
-        starText.style.opacity = '0';
+    if (moonImg) {
+        moonImg.classList.remove('moon-visible');
+        moonImg.classList.add('moon-hidden');
     }
 
     // Reset UI elements
@@ -378,6 +452,7 @@ function resetGame() {
     clearGameState();
 
     updateScoreDisplay();
+    updateProgressBar();
     
     // Start new game
     setTimeout(() => {
@@ -431,20 +506,18 @@ function setupGameEventListeners() {
         
         // First, reset the button to clean state
         btn.disabled = false;
-        btn.classList.remove('bg-blue-500', 'text-white', 'scale-110', 'opacity-50', 'bg-blue-100');
-        btn.classList.add('bg-blue-50', 'text-blue-700');
-        btn.style.pointerEvents = 'auto';
-        btn.style.cursor = 'pointer';
+        btn.classList.remove('selected', 'disabled', 'opacity-50');
+        btn.classList.add('btn-pointer-auto');
+        btn.classList.remove('btn-pointer-none');
         
         // Clone to remove old event listeners
         const newBtn = btn.cloneNode(true);
         
         // Ensure cloned button is in clean state
         newBtn.disabled = false;
-        newBtn.classList.remove('bg-blue-500', 'text-white', 'scale-110', 'opacity-50', 'bg-blue-100');
-        newBtn.classList.add('bg-blue-50', 'text-blue-700');
-        newBtn.style.pointerEvents = 'auto';
-        newBtn.style.cursor = 'pointer';
+        newBtn.classList.remove('selected', 'disabled', 'opacity-50');
+        newBtn.classList.add('btn-pointer-auto');
+        newBtn.classList.remove('btn-pointer-none');
         
         // Replace old button with new one
         btn.parentNode.replaceChild(newBtn, btn);
@@ -461,15 +534,14 @@ function setupGameEventListeners() {
             gameState.centerChoice = newBtn.dataset.choice;
             
             // Visual feedback
-            newBtn.classList.remove('bg-blue-50');
-            newBtn.classList.add('bg-blue-500', 'text-white', 'scale-110');
+            newBtn.classList.add('selected');
             
             // Disable other buttons
             const allButtons = document.querySelectorAll('.dd-choice-btn');
             allButtons.forEach(otherBtn => {
                 if (otherBtn !== newBtn) {
                     otherBtn.disabled = true;
-                    otherBtn.classList.add('opacity-50');
+                    otherBtn.classList.add('disabled');
                 }
             });
             
@@ -539,6 +611,9 @@ function setupEventListeners() {
     // Start button
     if (startBtn) {
         startBtn.addEventListener('click', () => {
+            const keys = Object.keys(THEMES);
+            ACTIVE_THEME = THEMES[keys[Math.floor(Math.random() * keys.length)]];
+            applyTheme();
             startGame();
         });
     }
@@ -547,6 +622,24 @@ function setupEventListeners() {
     setupGameEventListeners();
 }
 
+function applyTheme() {
+    // Apply background class
+    const gameArea = document.getElementById('dd-gameArea');
+    // Remove all possible theme classes before adding the new one
+    gameArea.classList.remove('dd-theme-space', 'dd-theme-ocean', 'dd-theme-candyworld');
+    gameArea.classList.add(ACTIVE_THEME.backgroundClass);
+
+    
+    document.querySelectorAll('.dd-choice-btn').forEach((btn, index) => {
+        const imageList = ACTIVE_THEME.centerObjects;
+        const img = btn.querySelector('img');
+        const sprite = imageList[index % imageList.length];
+        btn.dataset.choice = sprite;
+        img.src = sprite;
+    });
+    const prompt = document.getElementById('dd-clickPrompt');
+    prompt.textContent = ACTIVE_THEME.clickPrompt;
+}
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
@@ -561,6 +654,7 @@ function initializeGame() {
     
     // Initialize UI
     updateScoreDisplay();
+    updateProgressBar();
     
     // Show start screen (game area is hidden by default)
     if (startScreen) {
@@ -660,8 +754,8 @@ function buildSectors(n = NUM_SECTORS) {
             const allSectors = document.querySelectorAll('.dd-sector');
             allSectors.forEach((otherSector, otherIndex) => {
                 if (otherIndex !== i) {
-                    otherSector.style.pointerEvents = 'none';
-                    otherSector.style.opacity = '0.5';
+                    otherSector.classList.add('sector-pointer-none', 'sector-opacity-half');
+                    otherSector.classList.remove('sector-pointer-auto', 'sector-opacity-full');
                 }
             });
             
@@ -672,19 +766,33 @@ function buildSectors(n = NUM_SECTORS) {
     }
 }
 
-function positionStarInSector(sectorIndex) {
-    if (!starText) return;
+function positionMoonInSector(sectorIndex) {
+    if (!moonImg) return;
     const step = (2 * Math.PI) / NUM_SECTORS;
     const angle = (sectorIndex + 0.5) * step - Math.PI / 2;
 
+    // Calculate position in percentage for absolute positioning
+    // SVG viewBox is 0-1000, convert to percentage
+    // Reduced radius to 28% to keep larger moon within bounds
+    const cx = 50; // 50% (center)
+    const cy = 50; // 50% (center)
+    const r = 28; // 28% from center (reduced from 36% to account for larger moon size)
+    const xPercent = cx + (r * Math.cos(angle));
+    const yPercent = cy + (r * Math.sin(angle));
   
-    // Полярные координаты → ближе к краю круга
-    const cx = 500, cy = 500, r = 360; // радиус для звезды (чуть внутри сектора)
-    const pos = polarToXY(cx, cy, r, angle);
-  
-    starText.setAttribute('x', String(pos.x));
-    starText.setAttribute('y', String(pos.y));
-    starText.style.opacity = '1'; // Ensure the star is visible
+    moonImg.style.left = `${xPercent}%`;
+    moonImg.style.top = `${yPercent}%`;
+    moonImg.style.transform = 'translate(-50%, -50%)';
+    // Show correct image for theme
+    if (ACTIVE_THEME === THEMES.space) {
+        moonImg.src = 'img/moon.png';
+    } else if (ACTIVE_THEME === THEMES.ocean) {
+        moonImg.src = 'img/dolphin.png';
+    } else if (ACTIVE_THEME === THEMES.candyworld) {
+        moonImg.src = 'img/cookie.png';
+    }
+    moonImg.classList.remove('moon-hidden');
+    moonImg.classList.add('moon-visible');
   }
 })(); // End of IIFE
 

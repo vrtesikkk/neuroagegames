@@ -18,11 +18,18 @@ const INITIAL_NUM_TARGETS = 2;
 const MIN_TARGETS = 2;
 const MAX_TARGETS = 5;
 
-// Highlight duration in milliseconds (how long targets are shown)
-const HIGHLIGHT_DURATION = 1000; // 1 second
+// Initial highlight duration in milliseconds (how long targets are shown)
+const INITIAL_HIGHLIGHT_DURATION = 1000; // 1 second
 
-// Movement duration in milliseconds (how long circles move)
-const MOVEMENT_DURATION = 4000; // 4 seconds
+// Initial movement duration in milliseconds (how long circles move)
+const INITIAL_MOVEMENT_DURATION = 4000; // 4 seconds
+
+// Minimum durations to prevent too fast gameplay
+const MIN_HIGHLIGHT_DURATION = 300; // 0.3 seconds
+const MIN_MOVEMENT_DURATION = 1500; // 1.5 seconds
+
+// Speed difficulty increase per round (decrease duration by this amount)
+const SPEED_DIFFICULTY_STEP = 50; // 50ms per round
 
 // Movement speed (pixels per update)
 const INITIAL_MOVEMENT_SPEED = 2;
@@ -40,6 +47,9 @@ const MISTAKES_FOR_DIFFICULTY_DECREASE = 2;
 // Maximum rounds before game over (set to 0 for infinite)
 const MAX_ROUNDS = 0; // 0 = infinite
 
+// Target rounds for progress tracking
+const PROGRESS_TARGET_ROUNDS = 20;
+
 // ============================================================================
 // GAME STATE
 // ============================================================================
@@ -51,6 +61,8 @@ let gameState = {
     difficultyLevel: 1,
     numTargets: INITIAL_NUM_TARGETS,
     movementSpeed: INITIAL_MOVEMENT_SPEED,
+    highlightDuration: INITIAL_HIGHLIGHT_DURATION,
+    movementDuration: INITIAL_MOVEMENT_DURATION,
     consecutiveCorrect: 0,
     consecutiveMistakes: 0,
     targets: [],
@@ -77,6 +89,7 @@ const gameOverScreen = document.getElementById('tt-gameOverScreen');
 const roundCounter = document.getElementById('tt-roundCounter');
 const accuracyCounter = document.getElementById('tt-accuracyCounter');
 const streakCounter = document.getElementById('tt-streakCounter');
+const difficultyDisplay = document.getElementById('tt-difficultyDisplay');
 const statusMessage = document.getElementById('tt-statusMessage');
 const roundResult = document.getElementById('tt-roundResult');
 const resultText = document.getElementById('tt-resultText');
@@ -85,6 +98,9 @@ const finalRounds = document.getElementById('tt-finalRounds');
 const confirmModal = document.getElementById('tt-confirmModal');
 const confirmYes = document.getElementById('tt-confirmYes');
 const confirmNo = document.getElementById('tt-confirmNo');
+const progressBar = document.getElementById('tt-progressBar');
+const progressText = document.getElementById('tt-progressText');
+const progressDetails = document.getElementById('tt-progressDetails');
 
 let modalListenersAttached = false;
 
@@ -110,6 +126,8 @@ function loadGameState() {
         gameState.difficultyLevel = savedState.difficultyLevel || 1;
         gameState.numTargets = savedState.numTargets || INITIAL_NUM_TARGETS;
         gameState.movementSpeed = savedState.movementSpeed || INITIAL_MOVEMENT_SPEED;
+        gameState.highlightDuration = savedState.highlightDuration || INITIAL_HIGHLIGHT_DURATION;
+        gameState.movementDuration = savedState.movementDuration || INITIAL_MOVEMENT_DURATION;
         gameState.totalRounds = savedState.totalRounds || 0;
         gameState.correctRounds = savedState.correctRounds || 0;
         updateScoreDisplay();
@@ -125,7 +143,14 @@ function clearGameState() {
 // ============================================================================
 
 function updateScoreDisplay() {
-    if (roundCounter) roundCounter.textContent = gameState.currentRound;
+    // Only show round number if game is active, otherwise show 0
+    if (roundCounter) {
+        if (gameState.gameActive) {
+            roundCounter.textContent = gameState.currentRound;
+        } else {
+            roundCounter.textContent = 0;
+        }
+    }
     
     const accuracy = gameState.totalRounds > 0 
         ? Math.round((gameState.correctRounds / gameState.totalRounds) * 100)
@@ -133,6 +158,62 @@ function updateScoreDisplay() {
     if (accuracyCounter) accuracyCounter.textContent = `${accuracy}%`;
     
     if (streakCounter) streakCounter.textContent = gameState.consecutiveCorrect;
+    
+    // Update difficulty display (show highlight duration)
+    if (difficultyDisplay) {
+        if (gameState.gameActive) {
+            difficultyDisplay.textContent = `${gameState.highlightDuration}ms`;
+        } else {
+            difficultyDisplay.textContent = `${INITIAL_HIGHLIGHT_DURATION}ms`;
+        }
+    }
+    
+    // Update progress bar
+    updateProgressBar();
+}
+
+function updateProgressBar() {
+    // Only update progress bar if game is active
+    if (!gameState.gameActive) {
+        // Reset to initial state when game is not active
+        if (progressBar) {
+            progressBar.style.width = '0%';
+            progressBar.classList.remove('complete');
+        }
+        if (progressText) {
+            progressText.textContent = '0%';
+        }
+        if (progressDetails) {
+            progressDetails.textContent = `Round 0 of ${PROGRESS_TARGET_ROUNDS}`;
+        }
+        return;
+    }
+    
+    // Calculate progress: totalRounds / PROGRESS_TARGET_ROUNDS * 100
+    // Cap at 100% if they exceed the target
+    const progress = Math.min(100, Math.round((gameState.totalRounds / PROGRESS_TARGET_ROUNDS) * 100));
+    
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+        if (progress === 100) {
+            progressBar.classList.add('complete');
+        } else {
+            progressBar.classList.remove('complete');
+        }
+    }
+    
+    if (progressText) {
+        progressText.textContent = `${progress}%`;
+    }
+    
+    if (progressDetails) {
+        const remaining = Math.max(0, PROGRESS_TARGET_ROUNDS - gameState.totalRounds);
+        if (gameState.totalRounds >= PROGRESS_TARGET_ROUNDS) {
+            progressDetails.textContent = `Round ${gameState.totalRounds} • Target achieved! 🎉`;
+        } else {
+            progressDetails.textContent = `Round ${gameState.totalRounds} of ${PROGRESS_TARGET_ROUNDS} • ${remaining} remaining`;
+        }
+    }
 }
 
 // ============================================================================
@@ -140,7 +221,9 @@ function updateScoreDisplay() {
 // ============================================================================
 
 function createCircle(index) {
-    if (!gameCanvas) {
+    // Re-query gameCanvas to ensure it exists
+    const currentGameCanvas = document.getElementById('tt-gameCanvas') || gameCanvas;
+    if (!currentGameCanvas) {
         console.error('Target Tracker: gameCanvas not found');
         return null;
     }
@@ -149,8 +232,8 @@ function createCircle(index) {
     circle.className = 'tt-target-circle';
     
     // Random position within canvas bounds
-    const x = Math.random() * (gameCanvas.offsetWidth - CIRCLE_SIZE);
-    const y = Math.random() * (gameCanvas.offsetHeight - CIRCLE_SIZE);
+    const x = Math.random() * (currentGameCanvas.offsetWidth - CIRCLE_SIZE);
+    const y = Math.random() * (currentGameCanvas.offsetHeight - CIRCLE_SIZE);
     
     circle.style.left = x + 'px';
     circle.style.top = y + 'px';
@@ -175,7 +258,7 @@ function createCircle(index) {
     // Add click handler
     circle.addEventListener('click', () => handleCircleClick(index));
     
-    gameCanvas.appendChild(circle);
+    currentGameCanvas.appendChild(circle);
     
     return {
         element: circle,
@@ -190,13 +273,15 @@ function createCircle(index) {
 }
 
 function createCircles() {
-    if (!gameCanvas) {
+    // Re-query gameCanvas to ensure it exists
+    const currentGameCanvas = document.getElementById('tt-gameCanvas') || gameCanvas;
+    if (!currentGameCanvas) {
         console.error('Target Tracker: gameCanvas not found');
         return;
     }
     
     // Clear existing circles
-    gameCanvas.innerHTML = '';
+    currentGameCanvas.innerHTML = '';
     gameState.circles = [];
     
     // Create circles
@@ -248,11 +333,13 @@ function startHighlightPhase() {
         
         // Start movement phase
         startMovementPhase();
-    }, HIGHLIGHT_DURATION);
+    }, gameState.highlightDuration);
 }
 
 function startMovementPhase() {
-    if (!gameCanvas) {
+    // Re-query gameCanvas to ensure it exists
+    const currentGameCanvas = document.getElementById('tt-gameCanvas') || gameCanvas;
+    if (!currentGameCanvas) {
         console.error('Target Tracker: gameCanvas not found');
         return;
     }
@@ -275,10 +362,11 @@ function startMovementPhase() {
     let startTime = Date.now();
     
     function animate() {
-        if (!gameCanvas) return;
+        const canvas = document.getElementById('tt-gameCanvas') || gameCanvas;
+        if (!canvas) return;
         
         const elapsed = Date.now() - startTime;
-        const progress = elapsed / MOVEMENT_DURATION;
+        const progress = elapsed / gameState.movementDuration;
         
         if (progress >= 1) {
             // Stop movement
@@ -295,13 +383,13 @@ function startMovementPhase() {
             circle.y += circle.vy;
             
             // Bounce off walls
-            if (circle.x <= 0 || circle.x >= gameCanvas.offsetWidth - CIRCLE_SIZE) {
+            if (circle.x <= 0 || circle.x >= canvas.offsetWidth - CIRCLE_SIZE) {
                 circle.vx = -circle.vx;
-                circle.x = Math.max(0, Math.min(circle.x, gameCanvas.offsetWidth - CIRCLE_SIZE));
+                circle.x = Math.max(0, Math.min(circle.x, canvas.offsetWidth - CIRCLE_SIZE));
             }
-            if (circle.y <= 0 || circle.y >= gameCanvas.offsetHeight - CIRCLE_SIZE) {
+            if (circle.y <= 0 || circle.y >= canvas.offsetHeight - CIRCLE_SIZE) {
                 circle.vy = -circle.vy;
-                circle.y = Math.max(0, Math.min(circle.y, gameCanvas.offsetHeight - CIRCLE_SIZE));
+                circle.y = Math.max(0, Math.min(circle.y, canvas.offsetHeight - CIRCLE_SIZE));
             }
             
             // Occasionally change direction for more random movement
@@ -488,6 +576,23 @@ function nextRound() {
     }
     
     gameState.currentRound++;
+    
+    // Increase speed difficulty every round by 25ms (decrease durations)
+    gameState.highlightDuration = Math.max(
+        MIN_HIGHLIGHT_DURATION,
+        gameState.highlightDuration - SPEED_DIFFICULTY_STEP
+    );
+    gameState.movementDuration = Math.max(
+        MIN_MOVEMENT_DURATION,
+        gameState.movementDuration - SPEED_DIFFICULTY_STEP
+    );
+    
+    // Update round counter immediately when round increments
+    if (roundCounter) roundCounter.textContent = gameState.currentRound;
+    
+    // Update progress bar
+    updateProgressBar();
+    
     if (roundResult) roundResult.classList.add('hidden');
     
     // Reset circles
@@ -505,6 +610,24 @@ function nextRound() {
 }
 
 function startRound() {
+    // Re-query gameCanvas to ensure it exists and is visible
+    const currentGameCanvas = document.getElementById('tt-gameCanvas');
+    if (!currentGameCanvas) {
+        console.error('Target Tracker: gameCanvas not found in startRound');
+        return;
+    }
+    
+    // Ensure canvas has dimensions
+    if (currentGameCanvas.offsetWidth === 0 || currentGameCanvas.offsetHeight === 0) {
+        console.error('Target Tracker: gameCanvas has no dimensions');
+        // Retry after a short delay
+        setTimeout(() => startRound(), 100);
+        return;
+    }
+    
+    // Update round counter at the start of the round
+    if (roundCounter) roundCounter.textContent = gameState.currentRound;
+    
     gameState.selectionLocked = false;
     gameState.selectedCircles = [];
     createCircles();
@@ -529,12 +652,17 @@ function startGame() {
     gameState.gameActive = true;
     gameState.currentRound = 1;
     gameState.totalRounds = 0;
+    
+    // Reset progress bar
+    updateProgressBar();
     gameState.correctRounds = 0;
     gameState.consecutiveCorrect = 0;
     gameState.consecutiveMistakes = 0;
     gameState.difficultyLevel = 1;
     gameState.numTargets = INITIAL_NUM_TARGETS;
     gameState.movementSpeed = INITIAL_MOVEMENT_SPEED;
+    gameState.highlightDuration = INITIAL_HIGHLIGHT_DURATION;
+    gameState.movementDuration = INITIAL_MOVEMENT_DURATION;
     gameState.selectionLocked = false;
     
     updateScoreDisplay();
@@ -728,6 +856,24 @@ function initializeGame() {
     ensureModalListeners();
     
     loadGameState();
+    
+    // Reset progress bar when initializing (game not active yet)
+    if (progressBar) {
+        progressBar.style.width = '0%';
+        progressBar.classList.remove('complete');
+    }
+    if (progressText) {
+        progressText.textContent = '0%';
+    }
+    if (progressDetails) {
+        progressDetails.textContent = `Round 0 of ${PROGRESS_TARGET_ROUNDS}`;
+    }
+    
+    // Reset round counter to 0 when game is not active
+    if (roundCounter) {
+        roundCounter.textContent = 0;
+    }
+    
     updateScoreDisplay();
     
     // Show start screen

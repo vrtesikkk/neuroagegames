@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossword Puzzle</title>
+</head>
+<body>
+    <h1>soon..</h1>
+    <div class="container">
+        <h1>🧩 Crossword Puzzle</h1>
+        <div style="text-align: center;">
+        <div id="grid" class="grid"></div>
+        </div>
+    </div>
+    <div class = "clues">
+        <div class="clue-selection">
+            <h3>Across</h3>
+            <div id="across-clues"></div>
+        </div>
+        <div class="clue-selection">
+            <h3>Down</h3>
+            <div id="down-clues"></div>
+        </div>
+    </div>
+
+
+    <div class="buttons">
+        <button class="check-btn" onclick="checkAnswers()">Check Answers</button>
+        <button class="clear-btn" onclick="clearGrid()">Clear Grid</button>
+        <button class="new-btn" onclick="generatePuzzle()">New Game</button>
+    </div>
+    <script src="functions.js"></script>
+</body>
+
+</html>

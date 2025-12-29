@@ -37,10 +37,26 @@ body {
 .max-w-5xl { max-width: 64rem; }
 .max-w-md { max-width: 28rem; }
 .max-w-xl { max-width: 36rem; }
+.w-2 { width: 0.5rem; }
+.w-3 { width: 0.75rem; }
+.w-12 { width: 3rem; }
 .w-16 { width: 4rem; }
 .w-24 { width: 6rem; }
+.w-32 { width: 8rem; }
 .h-1 { height: 0.25rem; }
+.h-2 { height: 0.5rem; }
+.h-3 { height: 0.75rem; }
+.h-12 { height: 3rem; }
 .h-16 { height: 4rem; }
+.h-24 { height: 6rem; }
+.h-32 { height: 8rem; }
+.object-contain { object-fit: contain; }
+.z-5 { z-index: 5; }
+.z-10 { z-index: 10; }
+.opacity-0 { opacity: 0; }
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+.text-lightgray-700 { color: #374151; }
+.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
 
 /* Flexbox Utilities */
 .items-center { align-items: center; }
@@ -204,12 +220,69 @@ body {
 .hover\:neuroage-primary-dark:hover { background: linear-gradient(135deg, #0a3d1c 0%, #0f4f27 100%); }
 
 /* ============================================================================
+   Game Canvas Container
+   ============================================================================ */
+
+.dd-game-canvas-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    aspect-ratio: 1;
+    min-height: 250px;
+    max-height: 400px;
+}
+
+.tt-game-canvas-container {
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+    max-height: 600px;
+}
+
+/* ============================================================================
+   Image Sizes
+   ============================================================================ */
+
+.dd-moon-size {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.dd-center-object-size {
+    width: 6rem;
+    height: 6rem;
+}
+
+.dd-choice-btn-img {
+    width: 6rem;
+    height: 6rem;
+}
+
+@media (min-width: 768px) {
+    .dd-moon-size {
+        width: 2.25rem;
+        height: 2.25rem;
+    }
+    
+    .dd-center-object-size {
+        width: 8rem;
+        height: 8rem;
+    }
+    
+    .dd-choice-btn-img {
+        width: 8rem;
+        height: 8rem;
+    }
+}
+
+/* ============================================================================
    Double Decision Game Styles
    ============================================================================ */
 
 .dd-peripheral-position {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     min-width: 70px;
     min-height: 70px;
     cursor: pointer;
@@ -249,10 +322,37 @@ body {
     100% { opacity: 1; transform: scale(1); }
 }
 
+.dd-choice-btn {
+    background-color: #ecfdf5;
+    color: #166534;
+    font-weight: 700;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 2px solid #bbf7d0;
+    cursor: pointer;
+}
+
+.dd-choice-btn:hover {
+    background-color: #d1fae5;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
 .dd-choice-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+.dd-choice-btn.selected {
+    background-color: #166534;
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+.dd-choice-btn.disabled {
+    opacity: 0.5;
 }
 
 #dd-restartButton,
@@ -267,7 +367,7 @@ body {
     display: none;
 }
 
-#dd-gameArea {
+.dd-theme-space {
     position: relative;
     z-index: 1;
     background:
@@ -281,7 +381,12 @@ body {
     background-attachment: fixed;
     color: #fff;
 }
-
+.dd-theme-ocean {
+    background: linear-gradient(180deg, #003049 0%, #0077b6 50%, #00b4d8 100%);
+}
+.dd-theme-candyworld {
+    background: linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 50%, #f472b6 100%);
+}
 /* Game canvas container */
 #dd-gameArea > div:first-child {
     position: relative;
@@ -294,11 +399,20 @@ body {
     pointer-events: auto;
 }
 
-#dd-star {
+#dd-moon {
     z-index: 2;
     pointer-events: none;
     position: absolute;
     transition: opacity 0.2s ease;
+    object-fit: contain;
+}
+
+#dd-moon.moon-visible {
+    opacity: 1;
+}
+
+#dd-moon.moon-hidden {
+    opacity: 0;
 }
 
 #dd-centerObject {
@@ -479,6 +593,73 @@ body {
 }
 
 /* ============================================================================
+   Progress Bar Styles
+   ============================================================================ */
+
+.progress-bar-container {
+    width: 100%;
+}
+
+.progress-bar-wrapper {
+    width: 100%;
+    height: 1.5rem;
+    background-color: #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+    border-radius: 0.75rem;
+    transition: width 0.5s ease-in-out;
+    width: 0%;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%
+    );
+    animation: progress-shine 2s infinite;
+}
+
+@keyframes progress-shine {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.progress-bar-fill.complete {
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+    animation: progress-pulse 1s ease-in-out infinite;
+}
+
+@keyframes progress-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+}
+
+/* ============================================================================
    Game Container
    ============================================================================ */
 
@@ -493,6 +674,42 @@ body {
 /* ============================================================================
    Responsive Design
    ============================================================================ */
+
+/* Button States */
+.btn-pointer-auto {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.btn-pointer-none {
+    pointer-events: none;
+}
+
+.sector-pointer-auto {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.sector-pointer-none {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.sector-opacity-full {
+    opacity: 1;
+}
+
+.sector-opacity-half {
+    opacity: 0.5;
+}
+
+.text-green-600 {
+    color: #15803d;
+}
+
+.text-red-600 {
+    color: #dc2626;
+}
 
 @media (min-width: 768px) {
     .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -526,6 +743,143 @@ body {
     .tt-target-circle {
         width: 40px !important;
         height: 40px !important;
+    }
+}
+
+/* ============================================================================
+   Crossword Game Styles
+   ============================================================================ */
+
+.crossword-board-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.crossword-grid {
+    border-collapse: collapse;
+    margin: 0 auto;
+    background: white;
+}
+
+.crossword-grid td {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    position: relative;
+}
+
+.crossword-grid td.blocked {
+    background-color: #1f2937;
+    border-color: #111827;
+}
+
+.crossword-cell {
+    width: 100%;
+    height: 100%;
+    border: none;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: transparent;
+    color: #1f2937;
+    padding: 0;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.crossword-cell:focus {
+    background-color: #dbeafe;
+    border: 2px solid #3b82f6;
+    z-index: 10;
+}
+
+.crossword-cell.highlighted {
+    background-color: #fef3c7;
+    border: 1px solid #f59e0b;
+}
+
+.crossword-cell.correct {
+    background-color: #d1fae5;
+    color: #065f46;
+    border-color: #10b981;
+}
+
+.crossword-cell.incorrect {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-color: #ef4444;
+    animation: shake 0.3s;
+}
+
+.crossword-cell:disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.crossword-cell input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    outline: none;
+}
+
+.clue-item {
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.clue-item:hover {
+    background-color: #f3f4f6;
+    transform: translateX(0.25rem);
+}
+
+.clue-item.completed {
+    color: #10b981;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.clue-item strong {
+    color: #3b82f6;
+    margin-right: 0.5rem;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-0.25rem); }
+    75% { transform: translateX(0.25rem); }
+}
+
+@media (max-width: 768px) {
+    .crossword-grid td {
+        width: 2rem;
+        height: 2rem;
+    }
+    
+    .crossword-cell {
+        font-size: 1rem;
+    }
+    
+    .crossword-cell input {
+        font-size: 1rem;
     }
 }
 

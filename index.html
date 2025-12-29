@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeuroAge Cognitive Training | Brain Health Games</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -25,6 +25,33 @@
             
             <!-- Games Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Crossword Game Card -->
+                <div class="neuroage-card rounded-xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full neuroage-primary text-white text-3xl">
+                        📝
+                    </div>
+                    <h3 class="text-2xl font-bold neuroage-text-primary mb-3 text-center">Crossword</h3>
+                    <p class="text-gray-600 mb-6 text-center leading-relaxed">
+                        A crossword game challenges players to solve interlocking word grids using clues, logic, and vocabulary recognition.
+                    </p>
+                    <div class="text-center">
+                        <button type="button" onclick="switchGame('crossword'); return false;" class="w-full neuroage-primary hover:neuroage-primary-dark text-white font-semibold py-3 px-6 rounded-lg text-base transition-all duration-200 shadow-md hover:shadow-lg">
+                            Start Assessment
+                        </button>
+                    </div>
+                </div>
+                <script>
+                    // Replace crossword button behavior to open modern crossword
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var crosswordBtn = document.querySelector('button[onclick*="switchGame(\'crossword\')"]');
+                        if (crosswordBtn) {
+                            crosswordBtn.onclick = function() {
+                                window.location.href = 'crossword-modern.html';
+                                return false;
+                            };
+                        }
+                    });
+                </script>
                 <!-- Double Decision Game Card -->
                 <div class="neuroage-card rounded-xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full neuroage-primary text-white text-3xl">
@@ -72,28 +99,6 @@
             <h2 class="text-2xl font-bold neuroage-text-primary">Double Decision Assessment</h2>
         </div>
         
-        <!-- Score Display -->
-        <div class="neuroage-card rounded-lg p-4 mb-4">
-            <div class="flex justify-between items-center flex-wrap gap-4">
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 font-medium">Round</p>
-                    <p class="text-xl font-bold neuroage-text-primary" id="dd-roundCounter">1/10</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 font-medium">Attempts</p>
-                    <p class="text-xl font-bold neuroage-text-primary" id="dd-attemptsCounter">0</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 font-medium">Accuracy</p>
-                    <p class="text-xl font-bold neuroage-text-primary" id="dd-accuracyCounter">0%</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 font-medium">Difficulty</p>
-                    <p class="text-xl font-bold neuroage-text-primary" id="dd-difficultyDisplay">500ms</p>
-                </div>
-            </div>
-        </div>
-
         <!-- Start Screen -->
         <div id="dd-startScreen" class="neuroage-card rounded-lg p-8 text-center mb-4">
             <h1 class="text-3xl font-bold neuroage-text-primary mb-4">Double Decision Assessment</h1>
@@ -104,7 +109,7 @@
                 </p>
                 <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-left rounded">
                     <p class="text-sm text-gray-700">
-                        <strong>Instructions:</strong> Watch the center ufo and the moon that appears around it. After they disappear, choose which object was in the center and click where the star appeared.
+                        <strong>Instructions:</strong> Watch the center ufo and the moon that appears around it. After they disappear, choose which object was in the center and click where the moon appeared.
                     </p>
                 </div>
             </div>
@@ -115,36 +120,75 @@
 
         <!-- Game Area -->
         <div class="neuroage-card rounded-lg p-4 md:p-6 relative hidden" id="dd-gameArea">
+            <!-- Progress Bar -->
+            <div class="neuroage-card rounded-lg p-4 mb-4">
+                <div class="progress-bar-container">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-semibold text-gray-700">Training Progress</span>
+                        <span class="text-sm font-bold neuroage-text-primary" id="dd-progressText">0%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar-fill" id="dd-progressBar"></div>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1 text-center">
+                        <span id="dd-progressDetails">Round 0 of 10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score Display -->
+            <div class="neuroage-card rounded-lg p-4 mb-4">
+                <div class="flex justify-between items-center flex-wrap gap-4">
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 font-medium">Round</p>
+                        <p class="text-xl font-bold neuroage-text-primary" id="dd-roundCounter">1</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 font-medium">Attempts</p>
+                        <p class="text-xl font-bold neuroage-text-primary" id="dd-attemptsCounter">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 font-medium">Accuracy</p>
+                        <p class="text-xl font-bold neuroage-text-primary" id="dd-accuracyCounter">0%</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 font-medium">Difficulty</p>
+                        <p class="text-xl font-bold neuroage-text-primary" id="dd-difficultyDisplay">500ms</p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Game Canvas Container -->
-            <div class="relative w-full overflow-hidden mb-4" style="aspect-ratio: 1; min-height: 250px; max-height: 400px;">
+            <div class="dd-game-canvas-container">
                 <svg id="dd-sectorSvg" viewBox="0 0 1000 1000" class="absolute inset-0 w-full h-full z-0">
                     <g id="dd-sectors"></g>
-                    <text id="dd-star" x="500" y="120" text-anchor="middle" dominant-baseline="middle"
-                    style="font-size:48px; opacity:0; pointer-events:none;">⭐</text>
                 </svg>
+                <!-- Moon Display -->
+                <img id="dd-moon" src="img/moon.png" alt="Moon" class="dd-moon-size moon-hidden pointer-events-none z-5">
                 <!-- Center Object Display -->
                 <div class="dd-center-object-container absolute pointer-events-none z-10">
-                    <div class="text-5xl md:text-6xl" id="dd-centerObject">
-                        <div class image-center-object>
-                        <img src="img/ufo1.png" alt="UFO" class="hidden">
-                        <img src="img/ufo2.png" alt="ufo2" class="hidden">
-                        </div>
+                    <div id="dd-centerObject" class="flex items-center justify-center">
+                        <img id="dd-centerObjectImg" src="" alt="Center Object" class="dd-center-object-size object-contain hidden">
                     </div>
                 </div>
             </div>
             
             <!-- Center Object Choice Buttons -->
             <div class="mt-4">
-                <p class="text-center text-base font-semibold text-lightgray-700 mb-3">Which object appeared in the center?</p>
+                <p class="text-center text-base font-semibold text-aliceblue-700 mb-3">Which object appeared in the center?</p>
                 <div class="flex justify-center gap-3 flex-wrap">
-                    <button class="dd-choice-btn bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-3 px-6 rounded-lg text-3xl transition-all duration-200 shadow-md hover:shadow-lg border-2 border-blue-200" data-choice="🔵">🔵</button>
-                    <button class="dd-choice-btn bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-3 px-6 rounded-lg text-3xl transition-all duration-200 shadow-md hover:shadow-lg border-2 border-blue-200" data-choice="🔺">🔺</button>
+                    <button class="dd-choice-btn" data-choice="img/ufo1.png">
+                        <img src="img/ufo1.png" alt="UFO 1" class="dd-choice-btn-img object-contain">
+                    </button>
+                    <button class="dd-choice-btn" data-choice="img/ufo2.png">
+                        <img src="img/ufo2.png" alt="UFO 2" class="dd-choice-btn-img object-contain">
+                    </button>
                 </div>
             </div>
 
             <!-- Click Prompt -->
             <div class="mt-4 text-center">
-                <p class="text-base font-semibold text-lightgray-700" id="dd-clickPrompt">Click where the ⭐ appeared</p>
+                <p class="text-base font-semibold text-aliceblue-700" id="dd-clickPrompt">Click where the moon appeared</p>
             </div>
 
             <!-- Restart Button -->
@@ -203,24 +247,6 @@
             </button>
             <h2 class="text-2xl font-bold neuroage-text-primary">Target Tracker Assessment</h2>
         </div>
-        
-        <!-- Score Display -->
-        <div class="neuroage-card rounded-lg p-4 mb-4">
-            <div class="flex justify-between items-center flex-wrap gap-4">
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 font-medium">Round</p>
-                    <p class="text-xl font-bold neuroage-text-primary" id="tt-roundCounter">1</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 font-medium">Accuracy</p>
-                    <p class="text-xl font-bold neuroage-text-primary" id="tt-accuracyCounter">0%</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 font-medium">Streak</p>
-                    <p class="text-xl font-bold neuroage-text-primary" id="tt-streakCounter">0</p>
-                </div>
-            </div>
-        </div>
 
         <!-- Start Screen -->
         <div id="tt-startScreen" class="neuroage-card rounded-lg p-8 text-center mb-4">
@@ -243,7 +269,45 @@
 
         <!-- Game Area -->
         <div class="neuroage-card rounded-lg p-4 md:p-6 relative hidden" id="tt-gameArea">
-            <div class="tt-gameCanvas relative w-full" style="min-height: 400px; max-height: 600px;" id="tt-gameCanvas"></div>
+            <!-- Progress Bar -->
+            <div class="neuroage-card rounded-lg p-4 mb-4">
+                <div class="progress-bar-container">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-semibold text-gray-700">Training Progress</span>
+                        <span class="text-sm font-bold neuroage-text-primary" id="tt-progressText">0%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar-fill" id="tt-progressBar"></div>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1 text-center">
+                        <span id="tt-progressDetails">Round 0 of 20</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score Display -->
+            <div class="neuroage-card rounded-lg p-4 mb-4">
+                <div class="flex justify-between items-center flex-wrap gap-4">
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 font-medium">Round</p>
+                        <p class="text-xl font-bold neuroage-text-primary" id="tt-roundCounter">1</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 font-medium">Accuracy</p>
+                        <p class="text-xl font-bold neuroage-text-primary" id="tt-accuracyCounter">0%</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 font-medium">Streak</p>
+                        <p class="text-xl font-bold neuroage-text-primary" id="tt-streakCounter">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 font-medium">Difficulty</p>
+                        <p class="text-xl font-bold neuroage-text-primary" id="tt-difficultyDisplay">1000ms</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tt-gameCanvas tt-game-canvas-container" id="tt-gameCanvas"></div>
 
             <!-- Status Message -->
             <div class="mt-4 text-center">
@@ -310,6 +374,89 @@
         </div>
     </div>
 
+    <!-- Crossword Game -->
+    <div id="crossword" class="game-container max-w-6xl w-full mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <button type="button" onclick="switchGame('menu'); return false;" class="back-to-menu-btn mb-4">
+                <span class="back-arrow">←</span> Back to Menu
+            </button>
+            <h2 class="text-2xl font-bold neuroage-text-primary">Crossword Assessment</h2>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="neuroage-card rounded-lg p-8 text-center mb-4">
+            <h1 class="text-3xl font-bold neuroage-text-primary mb-4">Crossword Assessment</h1>
+            <p class="text-lg text-gray-700 mb-4 font-medium">Test your vocabulary and problem-solving skills</p>
+            <div class="max-w-xl mx-auto mb-6">
+                <p class="text-sm text-gray-600 leading-relaxed mb-3">
+                    This assessment measures your ability to solve word puzzles and recall vocabulary.
+                </p>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-left rounded">
+                    <p class="text-sm text-gray-700">
+                        <strong>Instructions:</strong> Fill in the crossword puzzle by typing letters in the cells. Click on clues to highlight words. Use arrow keys to navigate between cells.
+                    </p>
+                </div>
+            </div>
+            <button type="button" id="start-btn" class="neuroage-primary hover:neuroage-primary-dark text-white font-semibold py-3 px-8 rounded-lg text-base transition-all duration-200 shadow-md hover:shadow-lg">
+                Begin Assessment
+            </button>
+        </div>
+
+        <!-- Game Area -->
+        <div id="game-area" class="neuroage-card rounded-lg p-4 md:p-6 relative hidden">
+            <!-- Score Display -->
+            <div class="mb-4 text-center">
+                <span id="scoreDisplay" class="text-lg font-bold neuroage-text-primary">Words Completed: 0</span>
+            </div>
+            <div class="flex flex-col md:flex-row gap-6 mb-4">
+                <!-- Crossword Grid -->
+                <div class="flex-1">
+                    <table id="crosswordGrid" class="crossword-board-container"></table>
+                </div>
+                <!-- Clues Sidebar -->
+                <div class="w-full md:w-80">
+                    <div class="neuroage-card rounded-lg p-4 mb-4">
+                        <h3 class="text-lg font-bold neuroage-text-primary mb-3">Across</h3>
+                        <div id="acrossClues" class="space-y-2"></div>
+                    </div>
+                    <div class="neuroage-card rounded-lg p-4">
+                        <h3 class="text-lg font-bold neuroage-text-primary mb-3">Down</h3>
+                        <div id="downClues" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Action Buttons -->
+            <div class="mt-4 text-center">
+                <button id="restart-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-lg text-sm transition-all duration-200 shadow-md hover:shadow-lg">
+                    Restart Assessment
+                </button>
+                <button type="button" onclick="switchGame('menu'); return false;" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold py-2 px-6 rounded-lg text-sm transition-all duration-200 shadow-md hover:shadow-lg ml-2">
+                    Main Menu
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="neuroage-card rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+                <h2 class="text-3xl font-bold neuroage-text-primary mb-4">Assessment Complete</h2>
+                <div class="mb-6">
+                    <p class="text-lg text-gray-700 mb-2">Final Accuracy: <span class="font-bold neuroage-text-primary" id="final-accuracy">0%</span></p>
+                    <p class="text-lg text-gray-700">Words Completed: <span class="font-bold neuroage-text-primary" id="final-words">0</span></p>
+                </div>
+                <div class="flex gap-3 justify-center">
+                    <button id="play-again-btn" class="neuroage-primary hover:neuroage-primary-dark text-white font-semibold py-3 px-6 rounded-lg text-base transition-all duration-200 shadow-md hover:shadow-lg">
+                        Retake Assessment
+                    </button>
+                    <button type="button" onclick="switchGame('menu'); return false;" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg text-base transition-all duration-200">
+                        Main Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Game switcher function - must be defined first and attached to window
         // This ensures it's available immediately for onclick handlers
@@ -330,10 +477,12 @@
                 const mainMenu = document.getElementById('mainMenu');
                 const doubleDecision = document.getElementById('doubleDecision');
                 const targetTracker = document.getElementById('targetTracker');
+                const crossword = document.getElementById('crossword');
                 
                 if (mainMenu) mainMenu.style.display = 'none';
                 if (doubleDecision) doubleDecision.classList.remove('active');
                 if (targetTracker) targetTracker.classList.remove('active');
+                if (crossword) crossword.classList.remove('active');
                 
                 if (gameName === 'menu') {
                     if (mainMenu) mainMenu.style.display = 'flex';
@@ -350,6 +499,11 @@
                     currentGame = 'targetTracker';
                     // Update URL without reload
                     history.pushState({ game: 'targetTracker' }, '', window.location.pathname + '#target-tracker');
+                } else if (gameName === 'crossword') {
+                    if (crossword) crossword.classList.add('active');
+                    currentGame = 'crossword';
+                    // Update URL without reload
+                    history.pushState({ game: 'crossword' }, '', window.location.pathname + '#crossword');
                 }
                 
                 return false;
@@ -364,10 +518,12 @@
                 const mainMenu = document.getElementById('mainMenu');
                 const doubleDecision = document.getElementById('doubleDecision');
                 const targetTracker = document.getElementById('targetTracker');
+                const crossword = document.getElementById('crossword');
                 
                 if (mainMenu) mainMenu.style.display = 'none';
                 if (doubleDecision) doubleDecision.classList.remove('active');
                 if (targetTracker) targetTracker.classList.remove('active');
+                if (crossword) crossword.classList.remove('active');
                 
                 if (gameName === 'menu') {
                     if (mainMenu) mainMenu.style.display = 'flex';
@@ -382,6 +538,9 @@
                 } else if (gameName === 'targetTracker') {
                     if (targetTracker) targetTracker.classList.add('active');
                     currentGame = 'targetTracker';
+                } else if (gameName === 'crossword') {
+                    if (crossword) crossword.classList.add('active');
+                    currentGame = 'crossword';
                 }
             });
             
@@ -392,6 +551,8 @@
                     baseSwitchGame('doubleDecision');
                 } else if (hash === '#target-tracker') {
                     baseSwitchGame('targetTracker');
+                } else if (hash === '#crossword') {
+                    baseSwitchGame('crossword');
                 } else {
                     // Initialize with menu state
                     history.replaceState({ game: 'menu' }, '', window.location.pathname);
@@ -404,6 +565,7 @@
     </script>
     <script src="script.js"></script>
     <script src="target-tracker.js"></script>
+    <script src="crossword-modern.js"></script>
 </body>
 </html>
 
