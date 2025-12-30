@@ -46,7 +46,7 @@
                         var crosswordBtn = document.querySelector('button[onclick*="switchGame(\'crossword\')"]');
                         if (crosswordBtn) {
                             crosswordBtn.onclick = function() {
-                                window.location.href = 'crossword-modern.html';
+                                window.location.href = 'crossword.html';
                                 return false;
                             };
                         }
@@ -404,28 +404,7 @@
         </div>
 
         <!-- Game Area -->
-        <div id="game-area" class="neuroage-card rounded-lg p-4 md:p-6 relative hidden">
-            <!-- Score Display -->
-            <div class="mb-4 text-center">
-                <span id="scoreDisplay" class="text-lg font-bold neuroage-text-primary">Words Completed: 0</span>
-            </div>
-            <div class="flex flex-col md:flex-row gap-6 mb-4">
-                <!-- Crossword Grid -->
-                <div class="flex-1">
-                    <table id="crosswordGrid" class="crossword-board-container"></table>
-                </div>
-                <!-- Clues Sidebar -->
-                <div class="w-full md:w-80">
-                    <div class="neuroage-card rounded-lg p-4 mb-4">
-                        <h3 class="text-lg font-bold neuroage-text-primary mb-3">Across</h3>
-                        <div id="acrossClues" class="space-y-2"></div>
-                    </div>
-                    <div class="neuroage-card rounded-lg p-4">
-                        <h3 class="text-lg font-bold neuroage-text-primary mb-3">Down</h3>
-                        <div id="downClues" class="space-y-2"></div>
-                    </div>
-                </div>
-            </div>
+
             <!-- Action Buttons -->
             <div class="mt-4 text-center">
                 <button id="restart-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-lg text-sm transition-all duration-200 shadow-md hover:shadow-lg">
@@ -565,7 +544,6 @@
     </script>
     <script src="script.js"></script>
     <script src="target-tracker.js"></script>
-    <script src="crossword-modern.js"></script>
 </body>
 </html>
 

@@ -1,7 +1,61 @@
+
+
 // ============================================================================
 // DOUBLE DECISION GAME - Wrapped in IIFE to prevent global scope conflicts
 // ============================================================================
 (function() {
+'use strict';
+
+// =============================
+// SECTOR-INDEX-BASED PERIPHERAL OBJECT SPAWNING SYSTEM
+// =============================
+
+// Spawns peripheral objects for the round based on difficulty
+// Returns an array of objects: { type: 'correct'|'fake', img: string, sectorIndex: number }
+function spawnPeripheralObjects(difficulty) {
+    const sectors = Array.from({length: NUM_SECTORS}, (_, i) => i);
+    // Shuffle sector indices
+    for (let i = sectors.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [sectors[i], sectors[j]] = [sectors[j], sectors[i]];
+    }
+    const correctImg = ACTIVE_THEME.peripheralObject;
+    const fakeImgs = ACTIVE_THEME.fakePeripheralObjects || [];
+    let objects = [];
+    // Always 1 correct
+    objects.push({ type: 'correct', img: correctImg, sectorIndex: sectors[0] });
+    if (difficulty === 'medium') {
+        // 3 incorrect
+        for (let i = 1; i <= 3; i++) {
+            objects.push({ type: 'fake', img: fakeImgs[Math.floor(Math.random() * fakeImgs.length)], sectorIndex: sectors[i] });
+        }
+    } else if (difficulty === 'hard') {
+        // 7 incorrect
+        for (let i = 1; i < NUM_SECTORS; i++) {
+            objects.push({ type: 'fake', img: fakeImgs[Math.floor(Math.random() * fakeImgs.length)], sectorIndex: sectors[i] });
+        }
+    }
+    return objects;
+}
+
+// Returns {left, top, transform} for a given sectorIndex (0..NUM_SECTORS-1)
+function getPositionFromSector(sectorIndex) {
+    const step = (2 * Math.PI) / NUM_SECTORS;
+    const cx = 50, cy = 50, r = 13;
+    const angle = (sectorIndex + 0.5) * step - Math.PI / 2;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    return {
+        left: `${x}%`,
+        top: `${y}%`,
+        transform: 'translate(-50%, -50%)'
+    };
+}
+
+// Returns true if the sector contains at least one correct object
+function isSectorCorrect(objects, sectorIndex) {
+    return objects.some(obj => obj.sectorIndex === sectorIndex && obj.type === 'correct');
+}
 'use strict';
 
 // ============================================================================
@@ -11,30 +65,34 @@
 // Number of peripheral positions (currently 8)
 const NUM_PERIPHERAL_POSITIONS = 8;
 
+
 // Object types for center and peripheral display
-// You can change these to any emoji or character
+// Now includes correct and fake peripheral objects for each theme
 const THEMES = {
     space: {
         centerObjects: ['img/ufo1.png', 'img/ufo2.png'],
-        peripheralObject: 'img/moon.png',
+        peripheralObject: 'img/moon.png', // correct
+        fakePeripheralObjects: ['img/phobos.png'], // wrong
+        hardPeripheralObjects: ['img/phobos.png'], // only fake peripheral objects, never center objects
         backgroundClass: 'dd-theme-space',
-        clickPrompt: 'Click the sector where the moon appeared'
+        clickPrompt: 'Click the sector where the object appeared'
     },
-
     ocean: {
         centerObjects: ['img/shark1.png', 'img/shark2.png'],
-        peripheralObject: 'img/dolphin.png',
+        peripheralObject: 'img/dolphin.png', // correct
+        fakePeripheralObjects: ['img/dolphin2.png'], // wrong
+        hardPeripheralObjects: ['img/dolphin2.png'], // only fake peripheral objects, never center objects
         backgroundClass: 'dd-theme-ocean',
-        clickPrompt: 'Click the sector where the dolphin appeared'
+        clickPrompt: 'Click the sector where object appeared'
     },
-
-    candyworld: {
-        centerObjects: ['img/candy1.png', 'img/candy2.png'],
-        peripheralObject: 'img/cookie.png',
-        backgroundClass: 'dd-theme-candyworld',
-        clickPrompt: 'Click the sector where the cookie appeared'
+    savanna: {
+        centerObjects: ['img/cheetah.png', 'img/leopard.png'],
+        peripheralObject: 'img/impala.png', // correct
+        fakePeripheralObjects: ['img/antelope.png'], // wrong
+        hardPeripheralObjects: ['img/antelope.png'], // only fake peripheral objects, never center objects
+        backgroundClass: 'dd-theme-savanna',
+        clickPrompt: 'Click the sector where object appeared'
     }
-
 };
 
 let ACTIVE_THEME = THEMES.space; // Default theme
@@ -68,8 +126,10 @@ let gameState = {
     centerChoice: null,
     peripheralChoice: null,
     gameActive: false,
-    waitingForInput: false
+    waitingForInput: false,
+    selectedDifficulty: 'easy' // default, can be changed by user
 };
+
 
 // ============================================================================
 // DOM ELEMENTS
@@ -95,6 +155,28 @@ const moonImg = document.getElementById('dd-moon');
 const progressBar = document.getElementById('dd-progressBar');
 const progressText = document.getElementById('dd-progressText');
 const progressDetails = document.getElementById('dd-progressDetails');
+
+// Difficulty selection UI (to be added to start screen)
+let difficultySelection = document.getElementById('dd-difficultySelection');
+if (!difficultySelection && startScreen) {
+    // Create difficulty selection if not present
+    difficultySelection = document.createElement('div');
+    difficultySelection.id = 'dd-difficultySelection';
+    difficultySelection.innerHTML = `
+        <h3>Select Difficulty:</h3>
+        <button class="dd-difficulty-btn" data-difficulty="easy">Easy</button>
+        <button class="dd-difficulty-btn" data-difficulty="medium">Medium</button>
+        <button class="dd-difficulty-btn" data-difficulty="hard">Hard</button>
+        <div id="dd-difficultyDesc" style="margin-top:8px;font-size:0.95em;color:#555;"></div>
+    `;
+    startScreen.insertBefore(difficultySelection, startBtn);
+}
+
+// Disable start button until difficulty is selected
+if (startBtn) {
+    startBtn.disabled = true;
+    startBtn.classList.add('opacity-50', 'pointer-events-none');
+}
 
 let NUM_SECTORS = 8;
 // ============================================================================
@@ -245,9 +327,13 @@ function displayObjects() {
     // Re-setup event listeners to ensure buttons are clickable
     setupGameEventListeners();
 
-    // Random center object and sector for moon
+    // Random center object
     gameState.centerObject = getRandomCenterObject();
-    gameState.peripheralPosition = Math.floor(Math.random() * NUM_SECTORS);
+
+    // --- Peripheral object logic by difficulty (sector-index-based) ---
+    // Generate peripheral objects for this round
+    const peripheralObjects = spawnPeripheralObjects(gameState.selectedDifficulty);
+    gameState.peripheralObjectsThisRound = peripheralObjects;
 
     // Show center object (UFO image)
     const centerObjectImg = document.getElementById('dd-centerObjectImg');
@@ -261,15 +347,8 @@ function displayObjects() {
         centerObjectDisplay.classList.add('dd-object-visible');
     }
 
-    // Position moon in selected sector and show it
-    positionMoonInSector(gameState.peripheralPosition);
-
-    moonImg.src = ACTIVE_THEME.peripheralObject;
-
-    if (moonImg) {
-        moonImg.classList.remove('moon-hidden');
-        moonImg.classList.add('moon-visible');
-    }
+    // Position all peripheral objects in sectors
+    positionPeripheralObjectsInSectors(peripheralObjects);
 
     // Enable choice buttons
     if (choiceButtons && choiceButtons.length > 0) {
@@ -281,17 +360,7 @@ function displayObjects() {
         });
     }
 
-    // Reset sectors
-    const sectors = document.querySelectorAll('.dd-sector');
-    if (sectors && sectors.length > 0) {
-        sectors.forEach(sector => {
-            if (sector) {
-                sector.classList.remove('selected');
-                sector.classList.add('sector-pointer-auto', 'sector-opacity-full');
-                sector.classList.remove('sector-pointer-none', 'sector-opacity-half');
-            }
-        });
-    }
+
 
     // After display time, hide everything
     setTimeout(() => {
@@ -304,16 +373,53 @@ function displayObjects() {
             centerObjectDisplay.classList.remove('dd-object-visible');
             centerObjectDisplay.classList.add('dd-object-hidden');
         }
-        if (moonImg) {
-            moonImg.classList.remove('moon-visible');
-            moonImg.classList.add('moon-hidden');
-        }
+        // Hide all peripheral images
+        hidePeripheralObjects();
 
         setTimeout(() => {
             gameState.waitingForInput = true;
-            if (clickPrompt) clickPrompt.textContent = 'Click the sector where the moon appeared';
-        }, 200);
-    }, gameState.displayTime);
+            if (clickPrompt) clickPrompt.textContent = 'Click the sector where the object appeared';
+        }, 400); // slower appearance
+    }, gameState.displayTime + 200); // slower appearance
+}
+
+// Helper to position all peripheral objects in sectors
+// Helper to position all peripheral objects in sectors
+function positionPeripheralObjectsInSectors(peripheralObjects) {
+    // Remove any previous peripheral images
+    let container = document.getElementById('dd-peripheralContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'dd-peripheralContainer';
+        container.style.position = 'absolute';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.pointerEvents = 'none';
+        document.getElementById('dd-gameArea').appendChild(container);
+    }
+    container.innerHTML = '';
+    // Place all peripheral objects strictly by sectorIndex (no random offset)
+    peripheralObjects.forEach(obj => {
+        const pos = getPositionFromSector(obj.sectorIndex);
+        const img = document.createElement('img');
+        img.src = obj.img;
+        img.className = 'moon-visible dd-peripheral-img';
+        img.style.position = 'absolute';
+        img.style.left = pos.left;
+        img.style.top = pos.top;
+        img.style.transform = pos.transform;
+        img.style.width = '64px';
+        img.style.height = '64px';
+        img.style.pointerEvents = 'none';
+        container.appendChild(img);
+    });
+}
+
+function hidePeripheralObjects() {
+    let container = document.getElementById('dd-peripheralContainer');
+    if (container) container.innerHTML = '';
 }
 
 function checkAnswers() {
@@ -338,9 +444,13 @@ function checkAnswers() {
     }
 
     gameState.totalAttempts++;
-    
+
+    // Center answer is correct if matches center object
     const centerCorrect = gameState.centerChoice === gameState.centerObject;
-    const peripheralCorrect = gameState.peripheralChoice === gameState.peripheralPosition;
+
+    // Peripheral answer is correct if the chosen sector contains at least one correct object
+    let peripheralCorrect = isSectorCorrect(gameState.peripheralObjectsThisRound, gameState.peripheralChoice);
+
     const bothCorrect = centerCorrect && peripheralCorrect;
 
     // Visual feedback
@@ -608,6 +718,41 @@ function setupEventListeners() {
         }
     });
 
+    // Difficulty selection buttons
+    const diffBtns = document.querySelectorAll('.dd-difficulty-btn');
+    const diffDesc = document.getElementById('dd-difficultyDesc');
+    if (diffBtns && diffBtns.length > 0) {
+        diffBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                gameState.selectedDifficulty = btn.dataset.difficulty;
+                // Highlight selected
+                diffBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                // Enable start button
+                if (startBtn) {
+                    startBtn.disabled = false;
+                    startBtn.classList.remove('opacity-50', 'pointer-events-none');
+                }
+                // Optionally, show description
+                if (diffDesc) {
+                    if (btn.dataset.difficulty === 'easy') diffDesc.textContent = 'Easy: Only one correct peripheral object appears.';
+                    if (btn.dataset.difficulty === 'medium') diffDesc.textContent = 'Medium: Correct and a few wrong peripheral objects appear. Only the default is correct.';
+                    if (btn.dataset.difficulty === 'hard') diffDesc.textContent = 'Hard: Correct and more fake objects appear. Only the default is correct.';
+                }
+            });
+            btn.addEventListener('mouseenter', () => {
+                if (diffDesc) {
+                    if (btn.dataset.difficulty === 'easy') diffDesc.textContent = 'Easy: Only one correct peripheral object appears.';
+                    if (btn.dataset.difficulty === 'medium') diffDesc.textContent = 'Medium: Correct and a few wrong peripheral objects appear. Only the default is correct.';
+                    if (btn.dataset.difficulty === 'hard') diffDesc.textContent = 'Hard: Correct and more fake objects appear. Only the default is correct.';
+                }
+            });
+            btn.addEventListener('mouseleave', () => {
+                if (diffDesc) diffDesc.textContent = '';
+            });
+        });
+    }
+
     // Start button
     if (startBtn) {
         startBtn.addEventListener('click', () => {
@@ -626,10 +771,9 @@ function applyTheme() {
     // Apply background class
     const gameArea = document.getElementById('dd-gameArea');
     // Remove all possible theme classes before adding the new one
-    gameArea.classList.remove('dd-theme-space', 'dd-theme-ocean', 'dd-theme-candyworld');
+    gameArea.classList.remove('dd-theme-space', 'dd-theme-ocean', 'dd-theme-savanna');
     gameArea.classList.add(ACTIVE_THEME.backgroundClass);
 
-    
     document.querySelectorAll('.dd-choice-btn').forEach((btn, index) => {
         const imageList = ACTIVE_THEME.centerObjects;
         const img = btn.querySelector('img');
@@ -788,11 +932,11 @@ function positionMoonInSector(sectorIndex) {
         moonImg.src = 'img/moon.png';
     } else if (ACTIVE_THEME === THEMES.ocean) {
         moonImg.src = 'img/dolphin.png';
-    } else if (ACTIVE_THEME === THEMES.candyworld) {
-        moonImg.src = 'img/cookie.png';
+    } else if (ACTIVE_THEME === THEMES.savanna) {
+        moonImg.src = 'img/impala.png';
     }
     moonImg.classList.remove('moon-hidden');
     moonImg.classList.add('moon-visible');
-  }
+}
 })(); // End of IIFE
 

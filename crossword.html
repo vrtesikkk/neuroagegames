@@ -4,33 +4,736 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crossword Puzzle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #166534;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .grid-container {
+            display: inline-block;
+            margin: 20px 0;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 0;
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #333;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: white;
+            position: relative;
+            box-sizing: border-box;
+        }
+        
+        .cell:disabled {
+            background: #666;
+        }
+        
+        .cell:focus {
+            outline: 3px solid #667eea;
+            z-index: 1;
+        }
+        
+        .cell.correct {
+            background: #90EE90;
+        }
+        
+        .cell.incorrect {
+            background: #FFB6C1;
+        }
+        
+        .cell.highlighted {
+            background: #E6F3FF;
+        }
+        
+        .number {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .clues {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .clue-section h3 {
+            color: #166534;
+            margin-bottom: 10px;
+        }
+        
+        .clue {
+            margin: 8px 0;
+            line-height: 1.5;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        
+        .clue:hover {
+            background: #f0f0f0;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .check-btn {
+            background: #166534;
+            color: white;
+        }
+        
+        .new-btn {
+            background: #166534;
+            color: white;
+        }
+        
+        .clear-btn {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        /* Victory Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .victory-modal {
+            text-align: center;
+            max-width: 500px;
+            animation: slideIn 0.6s ease;
+        }
+        
+        .victory-title {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        
+        .victory-message {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+        
+        .victory-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .victory-btn {
+            padding: 15px 35px;
+            font-size: 16px;
+            border: 2px solid #333;
+            background: white;
+            color: #333;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+        
+        .victory-btn:hover {
+            background: #333;
+            color: white;
+        }
+        
+        .victory-btn.primary {
+            background: #333;
+            color: white;
+        }
+        
+        .victory-btn.primary:hover {
+            background: #555;
+            border-color: #555;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        } 
+        
+        
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px) scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(500px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>soon..</h1>
     <div class="container">
         <h1>🧩 Crossword Puzzle</h1>
         <div style="text-align: center;">
-        <div id="grid" class="grid"></div>
+            <div class="grid-container">
+                <div id="grid" class="grid"></div>
+            </div>
+        </div>
+        
+        <div class="clues">
+            <div class="clue-section">
+                <h3>Across</h3>
+                <div id="across-clues"></div>
+            </div>
+            <div class="clue-section">
+                <h3>Down</h3>
+                <div id="down-clues"></div>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button class="check-btn" onclick="checkAnswers()">Check Answers</button>
+            <button class="clear-btn" onclick="clearGrid()">Clear</button>
+            <button class="new-btn" onclick="generatePuzzle()">New Puzzle</button>
+            <button class="clear-btn" onclick="window.location.href='index.html'">Main Menu</button>
         </div>
     </div>
-    <div class = "clues">
-        <div class="clue-selection">
-            <h3>Across</h3>
-            <div id="across-clues"></div>
-        </div>
-        <div class="clue-selection">
-            <h3>Down</h3>
-            <div id="down-clues"></div>
+    
+    <!-- Victory Modal -->
+    <div id="victoryModal" class="modal-overlay" onclick="closeVictoryModal()">
+        <div class="victory-modal" onclick="event.stopPropagation()">
+            <div class="victory-title">Puzzle Completed</div>
+            <div class="victory-message">Well done!</div>
+            <div class="victory-buttons">
+                <button class="victory-btn" onclick="closeVictoryModal()">Close</button>
+                <button class="victory-btn primary" onclick="closeVictoryModal(); generatePuzzle();">New Puzzle</button>
+            </div>
         </div>
     </div>
 
+    <script>
+        const wordBank = [
+            { word: 'CAT', clue: 'Feline pet' },
+            { word: 'DOG', clue: 'Man\'s best friend' },
+            { word: 'SUN', clue: 'Star at center of solar system' },
+            { word: 'MOON', clue: 'Earth\'s natural satellite' },
+            { word: 'TREE', clue: 'Tall woody plant' },
+            { word: 'BOOK', clue: 'Thing you read' },
+            { word: 'OCEAN', clue: 'Large body of salt water' },
+            { word: 'RIVER', clue: 'Flowing body of water' },
+            { word: 'STAR', clue: 'Celestial body that shines' },
+            { word: 'RAIN', clue: 'Water falling from clouds' },
+            { word: 'SNOW', clue: 'Frozen precipitation' },
+            { word: 'WIND', clue: 'Moving air' },
+            { word: 'FIRE', clue: 'Hot glowing substance' },
+            { word: 'BIRD', clue: 'Feathered flying animal' },
+            { word: 'FISH', clue: 'Aquatic animal with gills' },
+            { word: 'LION', clue: 'King of the jungle'},
+            { word: 'BEAR', clue: 'Large mammal with thick fur' },
+            { word: 'WOLF', clue: 'Wild canine' },
+            { word: 'HORSE', clue: 'Domesticated hoofed animal' },
+            { word: 'SNAKE', clue: 'Legless reptile' },
+            { word: 'ELEPHANT', clue: 'Largest land animal' },
+            { word: 'BRAIN', clue: 'Control center of the body' },
+            { word: 'HEART', clue: 'Pumps blood through the body' },
+            { word: 'MOUNTAIN', clue: 'Large natural elevation of the earth' },
+            { word: 'VALLEY', clue: 'Low area between hills or mountains' },
+            { word: 'ISLAND', clue: 'Land surrounded by water' },
+            { word: 'DESERT', clue: 'Dry, arid region' },
+            { word: 'FOREST', clue: 'Dense collection of trees' },
+            { word: 'CLOUD', clue: 'Visible mass of condensed water vapor' },
+            { word: 'RAINBOW', clue: 'Arc of colors in the sky' },
+            { word: 'THUNDER', clue: 'Sound following lightning' },
+            { word: 'LIGHTNING', clue: 'Electrical discharge in the atmosphere' },
+            { word: 'VOLCANO', clue: 'Mountain that erupts lava' },
+            { word: 'GLACIER', clue: 'Large mass of ice' },
+            { word: 'CANYON', clue: 'Deep gorge' },
+            { word: 'OASIS', clue: 'Fertile spot in a desert' },
+            { word: 'CAVE', clue: 'Natural underground space' },
+            { word: 'WHALE', clue: 'Large marine mammal' },
+            { word: 'OCEAN', clue: 'Vast body of salt water' },
+            { word: 'EURASIA', clue: 'Largest continent' },
+            { word: 'AFRICA', clue: 'Continent known for its wildlife' },
+            { word: 'JUPITER', clue: 'Largest planet in our solar system' },
+            { word: 'APPLE', clue: 'Red or green fruit' },
+            { word: 'BREAD', clue: 'Used for sandwiches' },
+            { word: 'CHAIR', clue: 'You sit on it' },
+            { word: 'SHOE', clue: 'Worn on your foot' },
+            { word: 'HOUSE', clue: 'Place where you live' },
+            { word: 'CAR', clue: 'Vehicle with four wheels' },
+            { word: 'MILK', clue: 'White drink from cows' },
+            { word: 'EGG', clue: 'Breakfast food from chickens' },
+            { word: 'DOG', clue: 'Barks and wags tail' },
+            { word: 'CAT', clue: 'Purrs and chases mice' },
+            { word: 'HAND', clue: 'At the end of your arm' },
+            { word: 'FOOT', clue: 'At the end of your leg' },
+            { word: 'NOSE', clue: 'Used to smell' },
+            { word: 'EAR', clue: 'Used to hear' },
+            { word: 'EYE', clue: 'Used to see' },
+            { word: 'BAG', clue: 'Used to carry things' },
+            { word: 'COAT', clue: 'Worn when it is cold' },
+            { word: 'HAT', clue: 'Worn on your head' },
+            { word: 'SOAP', clue: 'Used to wash hands' },
+            { word: 'FORK', clue: 'Used to eat food' },
+            { word: 'SPOON', clue: 'Used for soup' },
+            { word: 'CUP', clue: 'Used for tea or coffee' },
+            { word: 'DOOR', clue: 'You open it to enter' },
+            { word: 'BED', clue: 'You sleep on it' },
+            { word: 'PEN', clue: 'Used to write' },
+            { word: 'BOOK', clue: 'You read it' },
+            { word: 'CHAIR', clue: 'You sit on it' },
+            { word: 'TABLE', clue: 'You eat at it' },
+            { word: 'FISH', clue: 'Lives in water' },
+            { word: 'BIRD', clue: 'Has wings and flies' },
+            { word: 'DUCK', clue: 'Quacks and swims' },
+            { word: 'COW', clue: 'Gives milk' },
+            { word: 'PIG', clue: 'Says oink' },
+            { word: 'HORSE', clue: 'You can ride it' },
+            { word: 'SHEEP', clue: 'Has wool' },
+            { word: 'GOAT', clue: 'Has horns and eats grass' },
+            { word: 'SUN', clue: 'Shines in the sky' },
+            { word: 'MOON', clue: 'Seen at night' },
+            { word: 'STAR', clue: 'Twinkles in the sky' },
+            { word: 'RAIN', clue: 'Falls from clouds' },
+            { word: 'SNOW', clue: 'White and cold' },
+            { word: 'WIND', clue: 'Moves the leaves' },
+            { word: 'TREE', clue: 'Has leaves and branches' },
+            { word: 'GRASS', clue: 'Green and grows in yards' },
+            { word: 'LEAF', clue: 'Grows on a tree' },
+            { word: 'ROOT', clue: 'Underground part of a plant' },
+            { word: 'BELL', clue: 'Rings when you shake it' },
+            { word: 'BALL', clue: 'Round and used in games' },
+            { word: 'TOY', clue: 'Children play with it' }
+        ];
 
-    <div class="buttons">
-        <button class="check-btn" onclick="checkAnswers()">Check Answers</button>
-        <button class="clear-btn" onclick="clearGrid()">Clear Grid</button>
-        <button class="new-btn" onclick="generatePuzzle()">New Game</button>
-    </div>
-    <script src="functions.js"></script>
+        let grid = [];
+        let words = [];
+        const GRID_SIZE = 10;
+        let currentWord = null; // Tracks which word is currently active
+
+        function generatePuzzle() {
+            grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+            words = [];
+            
+            const selectedWords = [...wordBank].sort(() => Math.random() - 0.5).slice(0, 8);
+            
+            selectedWords.forEach((item, i) => {
+                const dir = i % 2 === 0 ? 'across' : 'down';
+                placeWord(item.word, item.clue, dir);
+            });
+            
+            renderGrid();
+            renderClues();
+        }
+
+        function placeWord(word, clue, dir) {
+            let placed = false;
+            let attempts = 0;
+            
+            while (!placed && attempts < 100) {
+                const row = Math.floor(Math.random() * GRID_SIZE);
+                const col = Math.floor(Math.random() * GRID_SIZE);
+                
+                if (canPlaceWord(word, row, col, dir)) {
+                    for (let i = 0; i < word.length; i++) {
+                        if (dir === 'across') {
+                            grid[row][col + i] = word[i];
+                        } else {
+                            grid[row + i][col] = word[i];
+                        }
+                    }
+                    words.push({ word, clue, row, col, dir, number: words.length + 1 });
+                    placed = true;
+                }
+                attempts++;
+            }
+        }
+
+        function canPlaceWord(word, row, col, dir) {
+            if (dir === 'across') {
+                // Check if word fits horizontally
+                if (col + word.length > GRID_SIZE) return false;
+                
+                // Check space before word (must be empty or edge)
+                if (col > 0 && grid[row][col - 1] !== null) return false;
+                
+                // Check space after word (must be empty or edge)
+                if (col + word.length < GRID_SIZE && grid[row][col + word.length] !== null) return false;
+                
+                // Check each cell of the word
+                for (let i = 0; i < word.length; i++) {
+                    const currentCell = grid[row][col + i];
+                    
+                    // Cell must be empty OR have the same letter (for intersections)
+                    if (currentCell !== null && currentCell !== word[i]) {
+                        return false;
+                    }
+                    
+                    // Check cells above and below (must be empty unless it's an intersection)
+                    if (currentCell === null) {
+                        if (row > 0 && grid[row - 1][col + i] !== null) return false;
+                        if (row < GRID_SIZE - 1 && grid[row + 1][col + i] !== null) return false;
+                    }
+                }
+            } else {
+                // Check if word fits vertically
+                if (row + word.length > GRID_SIZE) return false;
+                
+                // Check space before word (must be empty or edge)
+                if (row > 0 && grid[row - 1][col] !== null) return false;
+                
+                // Check space after word (must be empty or edge)
+                if (row + word.length < GRID_SIZE && grid[row + word.length][col] !== null) return false;
+                
+                // Check each cell of the word
+                for (let i = 0; i < word.length; i++) {
+                    const currentCell = grid[row + i][col];
+                    
+                    // Cell must be empty OR have the same letter (for intersections)
+                    if (currentCell !== null && currentCell !== word[i]) {
+                        return false;
+                    }
+                    
+                    // Check cells left and right (must be empty unless it's an intersection)
+                    if (currentCell === null) {
+                        if (col > 0 && grid[row + i][col - 1] !== null) return false;
+                        if (col < GRID_SIZE - 1 && grid[row + i][col + 1] !== null) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function renderGrid() {
+            const gridEl = document.getElementById('grid');
+            gridEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 40px)`;
+            gridEl.innerHTML = '';
+            
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 1;
+                    input.className = 'cell';
+                    input.dataset.row = row;
+                    input.dataset.col = col;
+                    
+                    if (grid[row][col] === null) {
+                        input.disabled = true;
+                    } else {
+                        input.dataset.answer = grid[row][col];
+                        
+                        // Add click handler to set current word
+                        input.addEventListener('click', () => {
+                            setCurrentWord(row, col);
+                        });
+                        
+                        const wordStart = words.find(w => w.row === row && w.col === col);
+                        if (wordStart) {
+                            const num = document.createElement('span');
+                            num.className = 'number';
+                            num.textContent = wordStart.number;
+                            input.appendChild(num);
+                        }
+                        
+                        input.addEventListener('input', (e) => {
+                            e.target.value = e.target.value.toUpperCase();
+                            if (e.target.value && currentWord) {
+                                moveToNextInWord(e.target);
+                            }
+                        });
+                        
+                        input.addEventListener('keydown', (e) => {
+                            if (e.key === 'Backspace' && !e.target.value && currentWord) {
+                                moveToPrevInWord(e.target);
+                            }
+                        });
+                    }
+                    
+                    gridEl.appendChild(input);
+                }
+            }
+        }
+
+        function setCurrentWord(row, col) {
+            // Find which word(s) contain this cell
+            const wordsAtCell = words.filter(w => {
+                if (w.dir === 'across') {
+                    return w.row === row && col >= w.col && col < w.col + w.word.length;
+                } else {
+                    return w.col === col && row >= w.row && row < w.row + w.word.length;
+                }
+            });
+            
+            // If there are multiple words (intersection), toggle between them
+            if (wordsAtCell.length > 0) {
+                if (!currentWord || !wordsAtCell.includes(currentWord)) {
+                    currentWord = wordsAtCell[0];
+                } else {
+                    const idx = wordsAtCell.indexOf(currentWord);
+                    currentWord = wordsAtCell[(idx + 1) % wordsAtCell.length];
+                }
+                highlightCurrentWord();
+            }
+        }
+        
+        function highlightCurrentWord() {
+            // Remove previous highlights
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('highlighted'));
+            
+            if (!currentWord) return;
+            
+            // Highlight cells of current word
+            for (let i = 0; i < currentWord.word.length; i++) {
+                let r, c;
+                if (currentWord.dir === 'across') {
+                    r = currentWord.row;
+                    c = currentWord.col + i;
+                } else {
+                    r = currentWord.row + i;
+                    c = currentWord.col;
+                }
+                const cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+                if (cell) cell.classList.add('highlighted');
+            }
+        }
+        
+        function moveToNextInWord(input) {
+            if (!currentWord) return;
+            
+            const row = parseInt(input.dataset.row);
+            const col = parseInt(input.dataset.col);
+            
+            let nextRow, nextCol;
+            if (currentWord.dir === 'across') {
+                nextRow = row;
+                nextCol = col + 1;
+                // Check if next cell is still within the word
+                if (nextCol >= currentWord.col + currentWord.word.length) return;
+            } else {
+                nextRow = row + 1;
+                nextCol = col;
+                // Check if next cell is still within the word
+                if (nextRow >= currentWord.row + currentWord.word.length) return;
+            }
+            
+            const nextCell = document.querySelector(`.cell[data-row="${nextRow}"][data-col="${nextCol}"]`);
+            if (nextCell && !nextCell.disabled) {
+                nextCell.focus();
+            }
+        }
+        
+        function moveToPrevInWord(input) {
+            if (!currentWord) return;
+            
+            const row = parseInt(input.dataset.row);
+            const col = parseInt(input.dataset.col);
+            
+            let prevRow, prevCol;
+            if (currentWord.dir === 'across') {
+                prevRow = row;
+                prevCol = col - 1;
+                // Check if previous cell is still within the word
+                if (prevCol < currentWord.col) return;
+            } else {
+                prevRow = row - 1;
+                prevCol = col;
+                // Check if previous cell is still within the word
+                if (prevRow < currentWord.row) return;
+            }
+            
+            const prevCell = document.querySelector(`.cell[data-row="${prevRow}"][data-col="${prevCol}"]`);
+            if (prevCell && !prevCell.disabled) {
+                prevCell.focus();
+            }
+        }
+
+        function renderClues() {
+            const acrossEl = document.getElementById('across-clues');
+            const downEl = document.getElementById('down-clues');
+            acrossEl.innerHTML = '';
+            downEl.innerHTML = '';
+            
+            words.forEach(w => {
+                const div = document.createElement('div');
+                div.className = 'clue';
+                div.textContent = `${w.number}. ${w.clue}`;
+                
+                // Add click handler to focus on the first cell of the word
+                div.addEventListener('click', () => {
+                    focusOnWord(w.row, w.col);
+                });
+                
+                if (w.dir === 'across') {
+                    acrossEl.appendChild(div);
+                } else {
+                    downEl.appendChild(div);
+                }
+            });
+        }
+        
+        function focusOnWord(row, col) {
+            // Find the input cell at the specified row and column
+            const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+            if (cell && !cell.disabled) {
+                setCurrentWord(row, col);
+                cell.focus();
+                cell.select(); // Also select any existing text in the cell
+            }
+        }
+
+        function checkAnswers() {
+            const cells = document.querySelectorAll('.cell:not(:disabled)');
+            let correct = 0;
+            let total = 0;
+            
+            cells.forEach(cell => {
+                total++;
+                cell.classList.remove('correct', 'incorrect');
+                if (cell.value.toUpperCase() === cell.dataset.answer) {
+                    cell.classList.add('correct');
+                    correct++;
+                } else if (cell.value) {
+                    cell.classList.add('incorrect');
+                }
+            });
+            
+            if (correct === total) {
+                setTimeout(() => showVictoryModal(), 300);
+            }
+        }
+        
+        function showVictoryModal() {
+            const modal = document.getElementById('victoryModal');
+            modal.classList.add('show');
+        }
+        
+        function closeVictoryModal() {
+            const modal = document.getElementById('victoryModal');
+            modal.classList.remove('show');
+        }
+        
+        function createConfetti() {
+            const modal = document.querySelector('.victory-modal');
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                modal.appendChild(confetti);
+                
+                // Remove confetti after animation
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+
+        function clearGrid() {
+            document.querySelectorAll('.cell:not(:disabled)').forEach(cell => {
+                cell.value = '';
+                cell.classList.remove('correct', 'incorrect');
+            });
+        }
+
+        generatePuzzle();
+    </script>
 </body>
-
 </html>

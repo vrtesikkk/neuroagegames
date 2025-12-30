@@ -1,4 +1,80 @@
 /* ============================================================================
+   Difficulty Button Styles
+   ============================================================================ */
+.dd-difficulty-btn {
+    display: inline-block;
+    min-width: 110px;
+    margin: 0 0.5rem 0.5rem 0;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    border: 2px solid #bbf7d0;
+    background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+    color: #166534;
+    box-shadow: 0 2px 8px 0 rgba(34,197,94,0.08);
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.4,0,0.2,1);
+    outline: none;
+    position: relative;
+}
+.dd-difficulty-btn:hover, .dd-difficulty-btn:focus {
+    background: linear-gradient(135deg, #bbf7d0 0%, #6ee7b7 100%);
+    color: #065f46;
+    border-color: #22c55e;
+    box-shadow: 0 4px 16px 0 rgba(34,197,94,0.13);
+    transform: translateY(-2px) scale(1.04);
+}
+.dd-difficulty-btn.selected {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #fff;
+    border-color: #15803d;
+    box-shadow: 0 6px 24px 0 rgba(34,197,94,0.18);
+    transform: scale(1.07);
+    z-index: 1;
+}
+.dd-difficulty-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px 0 rgba(34,197,94,0.10);
+}
+.dd-sector {
+    fill: rgba(255,255,255,0.18); /* default: white highlight */
+    stroke: rgba(255,255,255,0.7);
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: fill 120ms ease, transform 120ms ease;
+}
+.dd-sector:hover {
+    fill: rgba(255,255,255,0.35);
+}
+.dd-sector.selected {
+    fill: rgba(255,255,255,0.55);
+}
+
+/* Savanna theme: orange sectors */
+.dd-theme-savanna .dd-sector {
+    fill: rgba(255, 140, 0, 0.18); /* orange highlight */
+    stroke: rgba(255, 140, 0, 0.7);
+}
+.dd-theme-savanna .dd-sector:hover {
+    fill: rgba(255, 140, 0, 0.35);
+}
+.dd-theme-savanna .dd-sector.selected {
+    fill: rgba(255, 140, 0, 0.55);
+}
+
+/* Ocean theme: blue sectors */
+.dd-theme-ocean .dd-sector {
+    fill: rgba(52, 211, 255, 0.18); /* blue highlight */
+    stroke: rgba(52, 211, 255, 0.7);
+}
+.dd-theme-ocean .dd-sector:hover {
+    fill: rgba(52, 211, 255, 0.35);
+}
+.dd-theme-ocean .dd-sector.selected {
+    fill: rgba(52, 211, 255, 0.55);
+}
+/* ============================================================================
    NeuroAge Cognitive Training - Optimized CSS
    ============================================================================ */
 
@@ -229,8 +305,8 @@ body {
     overflow: hidden;
     margin-bottom: 1rem;
     aspect-ratio: 1;
-    min-height: 250px;
-    max-height: 400px;
+    min-height: 350px;
+    max-height: 600px;
 }
 
 .tt-game-canvas-container {
@@ -287,7 +363,7 @@ body {
     min-height: 70px;
     cursor: pointer;
     border-radius: 50%;
-    transition: all 0.2s ease;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -299,15 +375,17 @@ body {
 .dd-peripheral-position:hover {
     background-color: rgba(34, 197, 94, 0.15);
     transform: scale(1.1);
+    transition-duration: 0.5s;
 }
 
 .dd-peripheral-position.selected {
     background-color: rgba(34, 197, 94, 0.35) !important;
     transform: scale(1.2) !important;
+    transition-duration: 0.5s;
 }
 
 .dd-object-visible {
-    animation: ddFadeInOut 0.1s ease-in;
+    animation: ddFadeInOut 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 1;
 }
 
@@ -318,7 +396,7 @@ body {
 
 @keyframes ddFadeInOut {
     0% { opacity: 0; transform: scale(0.5); }
-    50% { opacity: 1; transform: scale(1.1); }
+    60% { opacity: 1; transform: scale(1.1); }
     100% { opacity: 1; transform: scale(1); }
 }
 
@@ -370,22 +448,25 @@ body {
 .dd-theme-space {
     position: relative;
     z-index: 1;
-    background:
-    radial-gradient(circle at 20% 20%, #1a1931 0, transparent 50%),
-    radial-gradient(circle at 80% 80%, #201018 0, transparent 55%),
-    radial-gradient(circle at 10% 80%, #212e30 0, transparent 45%),
-    radial-gradient(circle at 90% 10%, #1c0344 0, transparent 40%),
-    linear-gradient(160deg, #020018, #13002e 40%, #2b0066 100%);
+    background-image: url('img/space-bg.png');
     background-size: cover;
   background-repeat: no-repeat;
     background-attachment: fixed;
     color: #fff;
 }
 .dd-theme-ocean {
-    background: linear-gradient(180deg, #003049 0%, #0077b6 50%, #00b4d8 100%);
+    background-image: url('img/ocean-bg.jpeg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: #fff;
 }
-.dd-theme-candyworld {
-    background: linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 50%, #f472b6 100%);
+.dd-theme-savanna {
+    background-image: url('img/savanna.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: #fff;
 }
 /* Game canvas container */
 #dd-gameArea > div:first-child {
@@ -510,19 +591,20 @@ body {
 .back-to-menu-btn:hover .back-arrow {
     transform: translateX(-2px);
 }
+
 .dd-sector {
-    fill: rgba(34, 197, 94, 0.12);     /* легкая подсветка */
-    stroke: rgba(34, 197, 94, 0.35);
-    stroke-width: 1;
-    cursor: pointer;
-    transition: fill 120ms ease, transform 120ms ease;
-  }
-  .dd-sector:hover {
-    fill: rgba(22, 101, 52, 0.35);
-  }
-  .dd-sector.selected {
-    fill: rgba(22, 128, 61, 0.45);
-  }
+        fill: rgba(255,255,255,0.18); /* light white highlight */
+        stroke: rgba(255,255,255,0.7);
+        stroke-width: 1.5;
+        cursor: pointer;
+        transition: fill 120ms ease, transform 120ms ease;
+}
+.dd-sector:hover {
+        fill: rgba(255,255,255,0.35);
+}
+.dd-sector.selected {
+        fill: rgba(255,255,255,0.55);
+}
 
 
 /* ============================================================================
@@ -746,140 +828,4 @@ body {
     }
 }
 
-/* ============================================================================
-   Crossword Game Styles
-   ============================================================================ */
-
-.crossword-board-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 1rem;
-    background: white;
-    border-radius: 0.5rem;
-    overflow-x: auto;
-}
-
-.crossword-grid {
-    border-collapse: collapse;
-    margin: 0 auto;
-    background: white;
-}
-
-.crossword-grid td {
-    width: 2.5rem;
-    height: 2.5rem;
-    padding: 0;
-    border: 1px solid #e5e7eb;
-    position: relative;
-}
-
-.crossword-grid td.blocked {
-    background-color: #1f2937;
-    border-color: #111827;
-}
-
-.crossword-cell {
-    width: 100%;
-    height: 100%;
-    border: none;
-    text-align: center;
-    font-size: 1.25rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    background: transparent;
-    color: #1f2937;
-    padding: 0;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-.crossword-cell:focus {
-    background-color: #dbeafe;
-    border: 2px solid #3b82f6;
-    z-index: 10;
-}
-
-.crossword-cell.highlighted {
-    background-color: #fef3c7;
-    border: 1px solid #f59e0b;
-}
-
-.crossword-cell.correct {
-    background-color: #d1fae5;
-    color: #065f46;
-    border-color: #10b981;
-}
-
-.crossword-cell.incorrect {
-    background-color: #fee2e2;
-    color: #991b1b;
-    border-color: #ef4444;
-    animation: shake 0.3s;
-}
-
-.crossword-cell:disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
-}
-
-.crossword-cell input {
-    width: 100%;
-    height: 100%;
-    border: none;
-    text-align: center;
-    font-size: 1.25rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    background: transparent;
-    color: inherit;
-    padding: 0;
-    outline: none;
-}
-
-.clue-item {
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    line-height: 1.5;
-}
-
-.clue-item:hover {
-    background-color: #f3f4f6;
-    transform: translateX(0.25rem);
-}
-
-.clue-item.completed {
-    color: #10b981;
-    text-decoration: line-through;
-    opacity: 0.7;
-}
-
-.clue-item strong {
-    color: #3b82f6;
-    margin-right: 0.5rem;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-0.25rem); }
-    75% { transform: translateX(0.25rem); }
-}
-
-@media (max-width: 768px) {
-    .crossword-grid td {
-        width: 2rem;
-        height: 2rem;
-    }
-    
-    .crossword-cell {
-        font-size: 1rem;
-    }
-    
-    .crossword-cell input {
-        font-size: 1rem;
-    }
-}
 
