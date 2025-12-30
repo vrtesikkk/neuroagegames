@@ -6,6 +6,41 @@
 (function() {
 'use strict';
 
+// Utility: Hide Double Decision game area and show start screen
+function showDDStartScreen() {
+    if (typeof document === 'undefined') return;
+    var startScreen = document.getElementById('dd-startScreen');
+    var gameArea = document.getElementById('dd-gameArea');
+    var gameOverScreen = document.getElementById('dd-gameOverScreen');
+    if (startScreen) startScreen.classList.remove('hidden');
+    if (gameArea) gameArea.classList.add('hidden');
+    if (gameOverScreen) gameOverScreen.classList.add('hidden');
+}
+
+// Listen for menu switch to always reset DD view
+if (typeof window !== 'undefined') {
+    window.addEventListener('popstate', function() {
+        var mainMenu = document.getElementById('mainMenu');
+        if (mainMenu && mainMenu.style.display === 'flex') {
+            showDDStartScreen();
+        }
+    });
+}
+
+// Patch switchGame to always reset DD view when entering DD
+if (typeof window !== 'undefined') {
+    var origSwitchGame = window.switchGame;
+    window.switchGame = function(gameName) {
+        if (gameName === 'doubleDecision') {
+            showDDStartScreen();
+        }
+        if (typeof origSwitchGame === 'function') {
+            return origSwitchGame.apply(this, arguments);
+        }
+    };
+}
+'use strict';
+
 // =============================
 // SECTOR-INDEX-BASED PERIPHERAL OBJECT SPAWNING SYSTEM
 // =============================
@@ -855,6 +890,9 @@ if (document.readyState === 'loading') {
     // DOM is already loaded, wait a bit for switchGame to be defined
     setTimeout(setupSwitchGameHandler, 50);
 }
+
+// Expose initializeGame globally for standalone HTML usage
+window.initializeGame = initializeGame;
 function polarToXY(cx, cy, r, angRad) {
     return {x: cx + r * Math.cos(angRad), y: cy + r * Math.sin(angRad)};
 }

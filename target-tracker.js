@@ -4,6 +4,41 @@
 (function() {
 'use strict';
 
+// Utility: Hide Target Tracker game area and show start screen
+function showTTStartScreen() {
+    if (typeof document === 'undefined') return;
+    var startScreen = document.getElementById('tt-startScreen');
+    var gameArea = document.getElementById('tt-gameArea');
+    var gameOverScreen = document.getElementById('tt-gameOverScreen');
+    if (startScreen) startScreen.classList.remove('hidden');
+    if (gameArea) gameArea.classList.add('hidden');
+    if (gameOverScreen) gameOverScreen.classList.add('hidden');
+}
+
+// Listen for menu switch to always reset TT view
+if (typeof window !== 'undefined') {
+    window.addEventListener('popstate', function() {
+        var mainMenu = document.getElementById('mainMenu');
+        if (mainMenu && mainMenu.style.display === 'flex') {
+            showTTStartScreen();
+        }
+    });
+}
+
+// Patch switchGame to always reset TT view when entering TT
+if (typeof window !== 'undefined') {
+    var origSwitchGameTT = window.switchGame;
+    window.switchGame = function(gameName) {
+        if (gameName === 'targetTracker') {
+            showTTStartScreen();
+        }
+        if (typeof origSwitchGameTT === 'function') {
+            return origSwitchGameTT.apply(this, arguments);
+        }
+    };
+}
+'use strict';
+
 // ============================================================================
 // GAME CONFIGURATION - Easy to adjust values
 // ============================================================================
